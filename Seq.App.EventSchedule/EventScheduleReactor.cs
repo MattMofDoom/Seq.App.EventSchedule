@@ -652,8 +652,8 @@ namespace Seq.App.EventSchedule
                 _endTime = _endTime.AddDays(_endTime.AddDays(1) < _startTime ? 2 : 1);
             }
 
-            //If we updated holidays, don't automatically put start time to the future
-            if ((!UseTestOverrideTime && _startTime < utcDate ||
+            //If we updated holidays or this is a repeating schedule, don't automatically put start time to the future
+            if (!RepeatSchedule && (!UseTestOverrideTime && _startTime < utcDate ||
                  UseTestOverrideTime && _startTime < TestOverrideTime.ToUniversalTime()) &&
                 !isUpdateHolidays) _startTime = _startTime.AddDays(1);
 
