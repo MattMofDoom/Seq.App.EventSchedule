@@ -43,10 +43,6 @@
     <Copy SourceFiles="$(PkgFlurl_Http)\lib\$(TargetFramework)\Flurl.Http.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
   <ItemGroup>
-    <None Include="D:\Documents\Onedrive\source\repos\Seq.App.EventSchedule\Seq.App.EventSchedule\schedule.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
     <None Include="../LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
