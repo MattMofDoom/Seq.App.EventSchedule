@@ -89,7 +89,8 @@ namespace Seq.App.EventSchedule
             DisplayName = "Schedule repeat interval (seconds)",
             HelpText =
                 "Time interval for repeating a scheduled event, up to a maximum of 86,400 seconds (24 hours). A log will be created at the scheduled intervals.",
-            InputType = SettingInputType.Integer)]
+            InputType = SettingInputType.Integer,
+            IsOptional = true)]
         public int ScheduleInterval { get; set; } = 60;
 
         [SeqAppSetting(DisplayName = "Log level for scheduled logs",
@@ -344,8 +345,8 @@ namespace Seq.App.EventSchedule
                 .ToArray();
             if (_tags.Length > 0) _isTags = true;
 
-            if (string.IsNullOrWhiteSpace(ScheduleLogLevel)) ScheduleLogLevel = "Error";
-            if (!Enum.TryParse(ScheduleLogLevel, out _thresholdLogLevel)) _thresholdLogLevel = LogEventLevel.Error;
+            if (string.IsNullOrWhiteSpace(ScheduleLogLevel)) ScheduleLogLevel = "Information";
+            if (!Enum.TryParse(ScheduleLogLevel, out _thresholdLogLevel)) _thresholdLogLevel = LogEventLevel.Information;
 
             if (!string.IsNullOrEmpty(Priority))
                 _priority = Priority;
