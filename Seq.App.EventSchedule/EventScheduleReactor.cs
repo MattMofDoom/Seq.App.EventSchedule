@@ -7,6 +7,7 @@ using System.Timers;
 using Seq.App.EventSchedule.Classes;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Seq.App.EventSchedule
 {
@@ -432,9 +433,7 @@ namespace Seq.App.EventSchedule
                         var description = HandleTokens(_alertDescription);
 
                         //Log event
-                        LogEvent(_thresholdLogLevel,
-                            string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}",
-                            message, description);
+                        ScheduledLogEvent(_thresholdLogLevel, message, description);
 
                         _lastLog = timeNow;
                         EventLogged = true;
@@ -480,7 +479,7 @@ namespace Seq.App.EventSchedule
 
         private static string HandleTokens(string value)
         {
-            var replaceParams = new Dictionary<string, string>()
+            var replaceParams = new Dictionary<string, string>
             {
                 {"{d}", DateTime.Today.Day.ToString()},
                 {"{dd}", DateTime.Today.ToString("dd")},
@@ -709,6 +708,31 @@ namespace Seq.App.EventSchedule
         public Showtime GetShowtime()
         {
             return new Showtime(_startTime, _endTime);
+        }
+
+        /// <summary>
+        /// Output a scheduled log event that always defines the Message and Description tags for use with other apps
+        /// </summary>
+        /// <param name="logLevel"></param>
+        /// <param name="message"></param>
+        /// <param name="description"></param>
+        private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description)
+        {
+            if (_includeApp)
+            {
+                message = "[{AppName}] -" + message;
+            }
+
+
+            if (_isTags)
+                Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
+                    .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
+                    .ForContext(nameof(LogCount), LogCount).ForContext("Message",message).ForContext("Description",description)
+                    .Write((Serilog.Events.LogEventLevel) logLevel, string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}");
+            else
+                Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
+                    .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount).ForContext("Message",message).ForContext("Description",description)
+                    .Write((Serilog.Events.LogEventLevel) logLevel, string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}");
         }
 
         /// <summary>
