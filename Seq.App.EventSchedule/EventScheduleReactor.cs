@@ -439,7 +439,7 @@ namespace Seq.App.EventSchedule
                             {"{M}", DateTime.Today.Month.ToString()},
                             {"{MM}", DateTime.Today.ToString("MM")},
                             {"{MMM}", DateTime.Today.ToString("MMM")},
-                            {"{MMMM}", DateTime.Today.ToString("MMM")},
+                            {"{MMMM}", DateTime.Today.ToString("MMMM")},
                             {"{yy}", DateTime.Today.ToString("yy")},
                             {"{yyyy}", DateTime.Today.ToString("yyyy")}
                         };
