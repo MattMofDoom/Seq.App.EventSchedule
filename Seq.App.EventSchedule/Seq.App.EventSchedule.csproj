@@ -18,7 +18,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
 - Add tokens to message and description for including date components in message and description</PackageReleaseNotes>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 

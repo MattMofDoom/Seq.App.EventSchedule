@@ -432,7 +432,7 @@ namespace Seq.App.EventSchedule
                         var description = _alertDescription;
                         Dictionary<string, string> replaceParams = new Dictionary<string, string>()
                         {
-                            {"{d}", DateTime.Today.ToString("d")},
+                            {"{d}", DateTime.Today.Day.ToString()},
                             {"{dd}", DateTime.Today.ToString("dd")},
                             {"{ddd}", DateTime.Today.ToString("ddd")},
                             {"{dddd}", DateTime.Today.ToString("dddd")},
