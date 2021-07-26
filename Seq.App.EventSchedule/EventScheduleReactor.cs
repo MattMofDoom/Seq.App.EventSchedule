@@ -436,7 +436,7 @@ namespace Seq.App.EventSchedule
                             {"{dd}", DateTime.Today.ToString("dd")},
                             {"{ddd}", DateTime.Today.ToString("ddd")},
                             {"{dddd}", DateTime.Today.ToString("dddd")},
-                            {"{M}", DateTime.Today.ToString("M")},
+                            {"{M}", DateTime.Today.Month.ToString()},
                             {"{MM}", DateTime.Today.ToString("MM")},
                             {"{MMM}", DateTime.Today.ToString("MMM")},
                             {"{MMMM}", DateTime.Today.ToString("MMM")},
