@@ -148,7 +148,7 @@ namespace Seq.App.EventSchedule
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Scheduled log tags",
-            HelpText = "Tags for the event, separated by commas.")]
+            HelpText = "Tags for the event, separated by commas. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string Tags { get; set; }
 
         [SeqAppSetting(
@@ -428,27 +428,8 @@ namespace Seq.App.EventSchedule
                     //Check the interval time versus threshold count
                     if (!EventLogged || _repeatSchedule && difference.TotalSeconds > _scheduleInterval.TotalSeconds)
                     {
-                        var message = _alertMessage;
-                        var description = _alertDescription;
-                        Dictionary<string, string> replaceParams = new Dictionary<string, string>()
-                        {
-                            {"{d}", DateTime.Today.Day.ToString()},
-                            {"{dd}", DateTime.Today.ToString("dd")},
-                            {"{ddd}", DateTime.Today.ToString("ddd")},
-                            {"{dddd}", DateTime.Today.ToString("dddd")},
-                            {"{M}", DateTime.Today.Month.ToString()},
-                            {"{MM}", DateTime.Today.ToString("MM")},
-                            {"{MMM}", DateTime.Today.ToString("MMM")},
-                            {"{MMMM}", DateTime.Today.ToString("MMMM")},
-                            {"{yy}", DateTime.Today.ToString("yy")},
-                            {"{yyyy}", DateTime.Today.ToString("yyyy")}
-                        };
-
-                        foreach (var token in replaceParams)
-                        {
-                            message = Regex.Replace(message, token.Key, token.Value, RegexOptions.IgnoreCase);
-                            description = Regex.Replace(message, token.Key, token.Value, RegexOptions.IgnoreCase);
-                        }
+                        var message = HandleTokens(_alertMessage);
+                        var description = HandleTokens(_alertDescription);
 
                         //Log event
                         LogEvent(_thresholdLogLevel,
@@ -490,6 +471,30 @@ namespace Seq.App.EventSchedule
             if (_excludeDays.Count > 0)
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {excludedays} ...",
                     _excludeDays.ToArray());
+        }
+
+        private static IEnumerable<string> HandleTokens(IEnumerable<string> values)
+        {
+            return values.Select(HandleTokens).ToList();
+        }
+
+        private static string HandleTokens(string value)
+        {
+            var replaceParams = new Dictionary<string, string>()
+            {
+                {"{d}", DateTime.Today.Day.ToString()},
+                {"{dd}", DateTime.Today.ToString("dd")},
+                {"{ddd}", DateTime.Today.ToString("ddd")},
+                {"{dddd}", DateTime.Today.ToString("dddd")},
+                {"{M}", DateTime.Today.Month.ToString()},
+                {"{MM}", DateTime.Today.ToString("MM")},
+                {"{MMM}", DateTime.Today.ToString("MMM")},
+                {"{MMMM}", DateTime.Today.ToString("MMMM")},
+                {"{yy}", DateTime.Today.ToString("yy")},
+                {"{yyyy}", DateTime.Today.ToString("yyyy")}
+            };
+
+            return replaceParams.Aggregate(value, (current, token) => Regex.Replace(current, token.Key, token.Value, RegexOptions.IgnoreCase));
         }
 
         /// <summary>
@@ -724,8 +729,10 @@ namespace Seq.App.EventSchedule
 
             var logArgs = logArgsList.ToArray();
 
+            
+
             if (_isTags)
-                Log.ForContext(nameof(Tags), _tags).ForContext("AppName", App.Title)
+                Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
                     .ForContext(nameof(LogCount), LogCount)
                     .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
@@ -755,7 +762,7 @@ namespace Seq.App.EventSchedule
             var logArgs = logArgsList.ToArray();
 
             if (_isTags)
-                Log.ForContext(nameof(Tags), _tags).ForContext("AppName", App.Title)
+                Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
                     .ForContext(nameof(LogCount), LogCount)
                     .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
