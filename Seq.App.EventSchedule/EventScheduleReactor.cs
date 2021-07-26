@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Timers;
 using Seq.App.EventSchedule.Classes;
 using Seq.Apps;
@@ -31,6 +32,7 @@ namespace Seq.App.EventSchedule
         private List<int> _includeDays;
         private bool _includeWeekends;
         private bool _repeatSchedule;
+        private bool _includeDescription;
 
         private bool _isTags;
         private bool _isUpdating;
@@ -128,15 +130,20 @@ namespace Seq.App.EventSchedule
         public string ExcludeDaysOfMonth { get; set; }
 
         [SeqAppSetting(
-            DisplayName = "Scheduled log message",
-            HelpText = "Event message to raise.")]
+            DisplayName = "Scheduled log message.",
+            HelpText = "Event message to raise. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string AlertMessage { get; set; }
 
         [SeqAppSetting(
             IsOptional = true,
-            DisplayName = "Scheduled log description",
-            HelpText = "Optional description associated with the event raised.")]
+            DisplayName = "Scheduled log description.",
+            HelpText = "Optional description associated with the event raised. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string AlertDescription { get; set; }
+
+        [SeqAppSetting(
+            DisplayName = "Include description with log message",
+            HelpText = "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
+        public bool IncludeDescription { get; set; } = false;
 
         [SeqAppSetting(
             IsOptional = true,
@@ -337,6 +344,11 @@ namespace Seq.App.EventSchedule
                 LogEvent(LogEventLevel.Debug, "Alert Description '{AlertDescription}' will be used ...",
                     _alertDescription);
 
+            _includeDescription = IncludeDescription;
+            if (_diagnostics)
+                LogEvent(LogEventLevel.Debug, "Include Description in Log Message: '{IncludeDescription}' ...",
+                    _includeDescription);
+
             if (_diagnostics) LogEvent(LogEventLevel.Debug, "Convert Tags '{Tags}' to array ...", Tags);
 
             _tags = (Tags ?? "")
@@ -416,10 +428,32 @@ namespace Seq.App.EventSchedule
                     //Check the interval time versus threshold count
                     if (!EventLogged || _repeatSchedule && difference.TotalSeconds > _scheduleInterval.TotalSeconds)
                     {
+                        var message = _alertMessage;
+                        var description = _alertDescription;
+                        Dictionary<string, string> replaceParams = new Dictionary<string, string>()
+                        {
+                            {"{d}", DateTime.Today.ToString("d")},
+                            {"{dd}", DateTime.Today.ToString("dd")},
+                            {"{ddd}", DateTime.Today.ToString("ddd")},
+                            {"{dddd}", DateTime.Today.ToString("dddd")},
+                            {"{M}", DateTime.Today.ToString("M")},
+                            {"{MM}", DateTime.Today.ToString("MM")},
+                            {"{MMM}", DateTime.Today.ToString("MMM")},
+                            {"{MMMM}", DateTime.Today.ToString("MMM")},
+                            {"{yy}", DateTime.Today.ToString("yy")},
+                            {"{yyyy}", DateTime.Today.ToString("yyyy")}
+                        };
+
+                        foreach (var token in replaceParams)
+                        {
+                            message = Regex.Replace(message, token.Key, token.Value, RegexOptions.IgnoreCase);
+                            description = Regex.Replace(message, token.Key, token.Value, RegexOptions.IgnoreCase);
+                        }
+
                         //Log event
                         LogEvent(_thresholdLogLevel,
-                            string.IsNullOrEmpty(_alertDescription) ? "{Message}" : "{Message} : {Description}",
-                            _alertMessage, _alertDescription);
+                            string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}",
+                            message, description);
 
                         _lastLog = timeNow;
                         EventLogged = true;

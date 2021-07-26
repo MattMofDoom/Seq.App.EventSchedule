@@ -16,8 +16,9 @@
     <PackageTags>seq-app seq event schedule log holidays</PackageTags>
     <PackageIcon>schedule.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes></PackageReleaseNotes>
-    <Version>1.0.2</Version>
+    <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
+- Add tokens to message and description for including date components in message and description</PackageReleaseNotes>
+    <Version>1.0.3</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 
