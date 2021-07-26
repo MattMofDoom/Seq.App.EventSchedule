@@ -56,7 +56,7 @@ namespace Seq.App.EventSchedule.Tests
             //Wait for showtime
             Thread.Sleep(2000);
             _testOutputHelper.WriteLine("Log count: {0}", app.LogCount);
-            Assert.True(app.LogCount == 1);
+            Assert.True(app.LogCount >= 1);
             for (var i = 1; i < 6; i++)
             {
                 Thread.Sleep(2000);
