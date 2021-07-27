@@ -16,10 +16,12 @@
     <PackageTags>seq-app seq event schedule log holidays</PackageTags>
     <PackageIcon>schedule.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
-- Add tokens to message, description, and tags for including date components in message and description
-- Always include Message and Description properties for the scheduled log events
-- Date tokens can include addition and subtraction (eg. {d+1} {M-10})</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      - Add option to include description in log message, instead of automatically including it
+      - Add tokens to message, description, and tags for including date components in message and description
+      - Always include Message and Description properties for the scheduled log events
+      - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
+    </PackageReleaseNotes>
     <Version>1.0.9</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
@@ -42,15 +44,19 @@
   </ItemGroup>
 
   <Target Name="Flurl" AfterTargets="Build">
-    <Copy SourceFiles="$(PkgFlurl)\lib\$(TargetFramework)\Flurl.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(PkgFlurl_Http)\lib\$(TargetFramework)\Flurl.Http.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(PkgFlurl)\lib\$(TargetFramework)\Flurl.dll" DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(PkgFlurl_Http)\lib\$(TargetFramework)\Flurl.Http.dll" DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" />
   </Target>
   <ItemGroup>
     <None Include="../LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="$(OutDir)/**/*" Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+    <None Include="$(OutDir)/**/*"
+          Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true"
+          PackagePath="lib/$(TargetFramework)" />
     <None Include="schedule.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
