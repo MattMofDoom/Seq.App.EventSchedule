@@ -16,12 +16,12 @@
     <PackageTags>seq-app seq event schedule log holidays</PackageTags>
     <PackageIcon>schedule.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes>
-      - Add option to include description in log message, instead of automatically including it
-      - Add tokens to message, description, and tags for including date components in message and description
-      - Always include Message and Description properties for the scheduled log events
-      - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
-    </PackageReleaseNotes>
+    <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
+- Add tokens to message, description, and tags for including date components in message and description
+- Always include Message and Description properties for the scheduled log events
+- Date tokens can include addition and subtraction (eg. {d+1} {M-10})
+- Add more complex date tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
+</PackageReleaseNotes>
     <Version>1.0.10</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
