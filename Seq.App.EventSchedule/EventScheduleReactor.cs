@@ -548,7 +548,7 @@ namespace Seq.App.EventSchedule
         {
             var replaceValue = value;
             const string matchString =
-                "(\\{(d{3}|d{4})?(\\s+)?(d{2})?(\\s+|\\/|\\-)?(M{1,4})(\\s+|\\/|\\-)?(Y{2}|Y{4})(\\+|\\-)?(\\d+)?(d|m|y)?\\})";
+                "(\\{(d{3}|d{4})?(\\s+)?(d{1,2})?(\\s+|\\/|\\-)?(M{1,4})(\\s+|\\/|\\-)?(Y{1,4})(\\+|\\-)?(\\d+)?(d|m|y)?\\})";
             var matches = Regex.Matches(replaceValue,
                 matchString, RegexOptions.IgnoreCase);
 
