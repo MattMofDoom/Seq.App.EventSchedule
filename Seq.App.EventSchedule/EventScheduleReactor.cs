@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Timers;
 using Seq.App.EventSchedule.Classes;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Seq.App.EventSchedule
@@ -33,9 +33,8 @@ namespace Seq.App.EventSchedule
         private bool _includeApp;
         private bool _includeBank;
         private List<int> _includeDays;
-        private bool _includeWeekends;
-        private bool _repeatSchedule;
         private bool _includeDescription;
+        private bool _includeWeekends;
 
         private bool _isTags;
         private bool _isUpdating;
@@ -51,23 +50,24 @@ namespace Seq.App.EventSchedule
         private string _proxy;
         private string _proxyPass;
         private string _proxyUser;
+        private bool _repeatSchedule;
         private string _responders;
         private int _retryCount;
+
+        private TimeSpan _scheduleInterval;
         private bool _skippedShowtime;
         private string _startFormat = "H:mm:ss";
         private DateTime _startTime;
         private string[] _tags;
         private string _testDate;
-
-        private TimeSpan _scheduleInterval;
         private LogEventLevel _thresholdLogLevel;
         private Timer _timer;
         private bool _useHolidays;
         private bool _useProxy;
-        public int LogCount;
-        public List<AbstractApiHolidays> Holidays;
         public bool EventLogged;
+        public List<AbstractApiHolidays> Holidays;
         public bool IsShowtime;
+        public int LogCount;
         public DateTime TestOverrideTime = DateTime.Now;
         public bool UseTestOverrideTime; // ReSharper disable MemberCanBePrivate.Global
 
@@ -488,7 +488,7 @@ namespace Seq.App.EventSchedule
 
         public static string HandleTokens(string value)
         {
-            var replaceValue = value;
+            var replaceValue = GetDateExpressionToken(value);
             var replaceParams = new List<string>
             {
                 "{d}",
@@ -506,29 +506,89 @@ namespace Seq.App.EventSchedule
             foreach (var token in replaceParams)
             {
                 var tokenMatch = Regex.Match(token, "\\{([dmy]+)\\}", RegexOptions.IgnoreCase);
-                var matches = Regex.Matches(value, "(\\{(" + tokenMatch.Groups[1].Value + ")(\\+|\\-)?(\\d+)?\\})",
-                    RegexOptions.IgnoreCase);
-                if (matches.Count > 0)
-                    for (var i = 0; i < matches.Count; i++)
-                    {
-                        var dateAdd = 0;
-                        switch (matches[i].Groups[3].Value)
-                        {
-                            case "+" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
-                                dateAdd = int.Parse(matches[i].Groups[4].Value);
-                                break;
-                            case "-" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
-                                dateAdd = -int.Parse(matches[i].Groups[4].Value);
-                                break;
-                        }
+                replaceValue = GetDateToken(replaceValue, tokenMatch, token);
+            }
 
-                        replaceValue = Regex.Replace(replaceValue, matches[i].Groups[1].Value.Replace("{", "\\{").Replace("}", "\\}").Replace("+", "\\+").Replace("-", "\\-"), 
-                            GetDateValue(token, dateAdd), RegexOptions.IgnoreCase);
-                    }
-                else
+            return replaceValue;
+        }
+
+        private static string GetDateToken(string value, Match tokenMatch, string token)
+        {
+            var replaceValue = value;
+
+
+            var matches = Regex.Matches(value, "(\\{(" + tokenMatch.Groups[1].Value + ")(\\+|\\-)?(\\d+)?\\})",
+                RegexOptions.IgnoreCase);
+            if (matches.Count > 0)
+                for (var i = 0; i < matches.Count; i++)
                 {
-                    replaceValue = Regex.Replace(replaceValue, token, GetDateValue(token));
+                    var dateAdd = 0;
+                    switch (matches[i].Groups[3].Value)
+                    {
+                        case "+" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
+                            dateAdd = int.Parse(matches[i].Groups[4].Value);
+                            break;
+                        case "-" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
+                            dateAdd = -int.Parse(matches[i].Groups[4].Value);
+                            break;
+                    }
+
+                    replaceValue = Regex.Replace(replaceValue,
+                        matches[i].Groups[1].Value.Replace("{", "\\{").Replace("}", "\\}").Replace("+", "\\+")
+                            .Replace("-", "\\-"),
+                        GetDateValue(token, dateAdd), RegexOptions.IgnoreCase);
                 }
+            else
+                replaceValue = Regex.Replace(replaceValue, token, GetDateValue(token));
+
+            return replaceValue;
+        }
+
+        private static string GetDateExpressionToken(string value)
+        {
+            var replaceValue = value;
+            const string matchString =
+                "(\\{(d{3}|d{4})?(\\s+)?(d{1,2})?(\\s+|\\/|\\-)?(M{1,4})(\\s+|\\/|\\-)?(Y{1,4})(\\+|\\-)?(\\d+)?(d|m|y)?\\})";
+            var matches = Regex.Matches(replaceValue,
+                matchString, RegexOptions.IgnoreCase);
+
+            for (var matchCount = 0; matchCount < matches.Count; matchCount++)
+            {
+                var s = new StringBuilder();
+                for (var group = 2; group < 9; group++)
+                    if (!string.IsNullOrEmpty(matches[matchCount].Groups[group].Value))
+                        s.Append(matches[matchCount].Groups[group].Value.Replace("D", "d").Replace("m", "M")
+                            .Replace("Y", "y"));
+                var dateAdd = 0;
+
+                switch (matches[matchCount].Groups[9].Value)
+                {
+                    case "+" when !string.IsNullOrEmpty(matches[matchCount].Groups[10].Value):
+                        dateAdd = int.Parse(matches[matchCount].Groups[10].Value);
+                        break;
+                    case "-" when !string.IsNullOrEmpty(matches[matchCount].Groups[10].Value):
+                        dateAdd = -int.Parse(matches[matchCount].Groups[10].Value);
+                        break;
+                }
+
+                var date = DateTime.Today;
+                if (!string.IsNullOrEmpty(matches[matchCount].Groups[11].Value))
+                    switch (matches[matchCount].Groups[11].Value.ToLower()[0])
+                    {
+                        case 'd':
+                            date = date.AddDays(dateAdd);
+                            break;
+                        case 'm':
+                            date = date.AddMonths(dateAdd);
+                            break;
+                        case 'y':
+                            date = date.AddYears(dateAdd);
+                            break;
+                    }
+
+                replaceValue = Regex.Replace(replaceValue,
+                    matches[0].Groups[1].Value.Replace("{", "\\{").Replace("+", "\\+").Replace("-", "\\-")
+                        .Replace("}", "\\}"), date.ToString(s.ToString()), RegexOptions.IgnoreCase);
             }
 
             return replaceValue;
@@ -771,7 +831,7 @@ namespace Seq.App.EventSchedule
 
             //If we updated holidays or this is a repeating schedule, don't automatically put start time to the future
             if (!RepeatSchedule && (!UseTestOverrideTime && _startTime < utcDate ||
-                 UseTestOverrideTime && _startTime < TestOverrideTime.ToUniversalTime()) &&
+                                    UseTestOverrideTime && _startTime < TestOverrideTime.ToUniversalTime()) &&
                 !isUpdateHolidays) _startTime = _startTime.AddDays(1);
 
             if (_endTime < _startTime)
@@ -781,7 +841,8 @@ namespace Seq.App.EventSchedule
                 isUpdateHolidays
                     ? "UTC Day Rollover (Holidays Updated), Parse {LocalStart} To Next UTC Schedule Time {ScheduleTime} ({StartDayOfWeek}), UTC End Time {EndTime} ({EndDayOfWeek})..."
                     : "UTC Day Rollover, Parse {LocalStart} To Next UTC Start Time {ScheduleTime} ({StartDayOfWeek}), UTC End Time {EndTime} ({EndDayOfWeek})...",
-                ScheduleTime, _startTime.ToShortTimeString(), _startTime.DayOfWeek, _endTime.ToShortTimeString(), _endTime.DayOfWeek);
+                ScheduleTime, _startTime.ToShortTimeString(), _startTime.DayOfWeek, _endTime.ToShortTimeString(),
+                _endTime.DayOfWeek);
         }
 
         public Showtime GetShowtime()
@@ -790,28 +851,33 @@ namespace Seq.App.EventSchedule
         }
 
         /// <summary>
-        /// Output a scheduled log event that always defines the Message and Description tags for use with other apps
+        ///     Output a scheduled log event that always defines the Message and Description tags for use with other apps
         /// </summary>
         /// <param name="logLevel"></param>
         /// <param name="message"></param>
         /// <param name="description"></param>
         private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description)
         {
-            if (_includeApp)
-            {
-                message = "[{AppName}] -" + message;
-            }
+            if (_includeApp) message = "[{AppName}] -" + message;
 
 
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
-                    .ForContext(nameof(LogCount), LogCount).ForContext("Message",message).ForContext("Description",description)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}");
+                    .ForContext(nameof(LogCount), LogCount).ForContext("Message", message)
+                    .ForContext("Description", description)
+                    .Write((Serilog.Events.LogEventLevel) logLevel,
+                        string.IsNullOrEmpty(description) || !_includeDescription
+                            ? "{Message}"
+                            : "{Message} : {Description}");
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
-                    .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount).ForContext("Message",message).ForContext("Description",description)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, string.IsNullOrEmpty(description) || !_includeDescription ? "{Message}" : "{Message} : {Description}");
+                    .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
+                    .ForContext("Message", message).ForContext("Description", description)
+                    .Write((Serilog.Events.LogEventLevel) logLevel,
+                        string.IsNullOrEmpty(description) || !_includeDescription
+                            ? "{Message}"
+                            : "{Message} : {Description}");
         }
 
         /// <summary>
@@ -832,7 +898,6 @@ namespace Seq.App.EventSchedule
 
             var logArgs = logArgsList.ToArray();
 
-            
 
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)

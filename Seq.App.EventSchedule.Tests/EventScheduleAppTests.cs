@@ -239,6 +239,18 @@ namespace Seq.App.EventSchedule.Tests
 
             _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}"), $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
             Assert.True(EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}") == $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d M y+10d}"), $"{DateTime.Today.AddDays(10):d M yyyy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{d M y+10d}") == $"{DateTime.Today.AddDays(10):d M y}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dd MM yy+10m}"), $"{DateTime.Today.AddMonths(10):dd MM yy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{dd MM yy+10m}") == $"{DateTime.Today.AddMonths(10):dd MM yy}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dd MMM yyy+10y}"), $"{DateTime.Today.AddYears(10):dd MMM yyy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{dd MMM yyy+10y}") == $"{DateTime.Today.AddYears(10):dd MMM yyy}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
         }
     }
 }
