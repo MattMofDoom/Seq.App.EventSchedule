@@ -11,7 +11,7 @@ namespace Seq.App.EventSchedule.Tests
 {
     public class EventScheduleAppTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        private ITestOutputHelper _testOutputHelper;
 
         public EventScheduleAppTests(ITestOutputHelper testOutputHelper)
         {
@@ -222,6 +222,23 @@ namespace Seq.App.EventSchedule.Tests
                 Dates.GetDaysOfMonth("first,last,first weekday,last weekday,first monday", "12:00", "H:mm").ToArray()));
             Assert.True(Dates.GetDaysOfMonth("first,last,first weekday,last weekday,first monday", "12:00", "H:mm")
                 .Count > 0);
+        }
+
+        [Fact]
+        public void DateTokenParse()
+        {
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d} {M} {yy}"), $"{DateTime.Today.Day} {DateTime.Today.Month} {DateTime.Today:yy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{d} {M} {yy}") ==
+                        $"{DateTime.Today.Day} {DateTime.Today.Month} {DateTime.Today:yy}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dddd-1} {d-1} {MMMM} {yyyy}"), string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1).Day, DateTime.Today));
+            Assert.True(EventScheduleReactor.HandleTokens("{dddd-1} {d-1} {MMMM} {yyyy}") == string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1).Day, DateTime.Today));
+            
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dddd+2} {d+2} {MMMM} {yyyy}"), string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(2), DateTime.Today.AddDays(2).Day, DateTime.Today));
+            Assert.True(EventScheduleReactor.HandleTokens("{dddd+2} {d+2} {MMMM} {yyyy}") == string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(2), DateTime.Today.AddDays(2).Day, DateTime.Today));
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}"), $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}") == $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
         }
     }
 }
