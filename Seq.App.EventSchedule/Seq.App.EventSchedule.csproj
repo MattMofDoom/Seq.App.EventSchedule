@@ -20,9 +20,9 @@
 - Add tokens to message, description, and tags for including date components in message and description
 - Always include Message and Description properties for the scheduled log events
 - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
-- Add more complex date tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
-</PackageReleaseNotes>
-    <Version>1.0.10</Version>
+- Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
+- Multiple date expression tokens are permitted</PackageReleaseNotes>
+    <Version>1.0.11</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 

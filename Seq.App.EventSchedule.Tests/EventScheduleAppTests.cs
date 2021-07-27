@@ -251,6 +251,9 @@ namespace Seq.App.EventSchedule.Tests
 
             _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
             Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
+
+            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
+            Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
         }
     }
 }
