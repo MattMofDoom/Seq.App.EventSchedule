@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
 using Seq.App.EventSchedule.Classes;
@@ -68,6 +70,7 @@ namespace Seq.App.EventSchedule
         public bool IsShowtime;
         public DateTime TestOverrideTime = DateTime.Now;
         public bool UseTestOverrideTime; // ReSharper disable MemberCanBePrivate.Global
+
         // ReSharper disable UnusedAutoPropertyAccessor.Global
         // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
         [SeqAppSetting(
@@ -132,24 +135,28 @@ namespace Seq.App.EventSchedule
 
         [SeqAppSetting(
             DisplayName = "Scheduled log message.",
-            HelpText = "Event message to raise. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
+            HelpText =
+                "Event message to raise. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string AlertMessage { get; set; }
 
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Scheduled log description.",
-            HelpText = "Optional description associated with the event raised. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
+            HelpText =
+                "Optional description associated with the event raised. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string AlertDescription { get; set; }
 
         [SeqAppSetting(
             DisplayName = "Include description with log message",
-            HelpText = "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
+            HelpText =
+                "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
         public bool IncludeDescription { get; set; } = false;
 
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Scheduled log tags",
-            HelpText = "Tags for the event, separated by commas. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
+            HelpText =
+                "Tags for the event, separated by commas. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string Tags { get; set; }
 
         [SeqAppSetting(
@@ -269,7 +276,8 @@ namespace Seq.App.EventSchedule
                     _startFormat = "H:mm";
                 else
                     LogEvent(LogEventLevel.Debug,
-                        "Start Time {ScheduleTime} does  not parse to a valid DateTime - app will exit ...", ScheduleTime);
+                        "Start Time {ScheduleTime} does  not parse to a valid DateTime - app will exit ...",
+                        ScheduleTime);
             }
 
             _repeatSchedule = RepeatSchedule;
@@ -359,7 +367,8 @@ namespace Seq.App.EventSchedule
             if (_tags.Length > 0) _isTags = true;
 
             if (string.IsNullOrWhiteSpace(ScheduleLogLevel)) ScheduleLogLevel = "Information";
-            if (!Enum.TryParse(ScheduleLogLevel, out _thresholdLogLevel)) _thresholdLogLevel = LogEventLevel.Information;
+            if (!Enum.TryParse(ScheduleLogLevel, out _thresholdLogLevel))
+                _thresholdLogLevel = LogEventLevel.Information;
 
             if (!string.IsNullOrEmpty(Priority))
                 _priority = Priority;
@@ -477,24 +486,94 @@ namespace Seq.App.EventSchedule
             return values.Select(HandleTokens).ToList();
         }
 
-        private static string HandleTokens(string value)
+        public static string HandleTokens(string value)
         {
-            var replaceParams = new Dictionary<string, string>
+            var replaceValue = value;
+            var replaceParams = new List<string>
             {
-                {"{d}", DateTime.Today.Day.ToString()},
-                {"{dd}", DateTime.Today.ToString("dd")},
-                {"{ddd}", DateTime.Today.ToString("ddd")},
-                {"{dddd}", DateTime.Today.ToString("dddd")},
-                {"{M}", DateTime.Today.Month.ToString()},
-                {"{MM}", DateTime.Today.ToString("MM")},
-                {"{MMM}", DateTime.Today.ToString("MMM")},
-                {"{MMMM}", DateTime.Today.ToString("MMMM")},
-                {"{yy}", DateTime.Today.ToString("yy")},
-                {"{yyyy}", DateTime.Today.ToString("yyyy")}
+                "{d}",
+                "{dd}",
+                "{ddd}",
+                "{dddd}",
+                "{M}",
+                "{MM}",
+                "{MMM}",
+                "{MMMM}",
+                "{yy}",
+                "{yyyy}"
             };
 
-            return replaceParams.Aggregate(value, (current, token) => Regex.Replace(current, token.Key, token.Value, RegexOptions.IgnoreCase));
+            foreach (var token in replaceParams)
+            {
+                var tokenMatch = Regex.Match(token, "\\{([dmy]+)\\}", RegexOptions.IgnoreCase);
+                var matches = Regex.Matches(value, "(\\{(" + tokenMatch.Groups[1].Value + ")(\\+|\\-)?(\\d+)?\\})",
+                    RegexOptions.IgnoreCase);
+                if (matches.Count > 0)
+                    for (var i = 0; i < matches.Count; i++)
+                    {
+                        var dateAdd = 0;
+                        switch (matches[i].Groups[3].Value)
+                        {
+                            case "+" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
+                                dateAdd = int.Parse(matches[i].Groups[4].Value);
+                                break;
+                            case "-" when !string.IsNullOrEmpty(matches[i].Groups[4].Value):
+                                dateAdd = -int.Parse(matches[i].Groups[4].Value);
+                                break;
+                        }
+
+                        replaceValue = Regex.Replace(replaceValue, matches[i].Groups[1].Value.Replace("{", "\\{").Replace("}", "\\}").Replace("+", "\\+").Replace("-", "\\-"), 
+                            GetDateValue(token, dateAdd), RegexOptions.IgnoreCase);
+                    }
+                else
+                {
+                    replaceValue = Regex.Replace(replaceValue, token, GetDateValue(token));
+                }
+            }
+
+            return replaceValue;
         }
+
+        private static string GetDateValue(string matchType, int dateAdd = 0)
+        {
+            var dateValue = string.Empty;
+            switch (matchType.ToLower())
+            {
+                case "{d}":
+                    dateValue = DateTime.Today.AddDays(dateAdd).Day.ToString();
+                    break;
+                case "{dd}":
+                    dateValue = DateTime.Today.AddDays(dateAdd).ToString("dd");
+                    break;
+                case "{ddd}":
+                    dateValue = DateTime.Today.AddDays(dateAdd).ToString("ddd");
+                    break;
+                case "{dddd}":
+                    dateValue = DateTime.Today.AddDays(dateAdd).ToString("dddd");
+                    break;
+                case "{m}":
+                    dateValue = DateTime.Today.AddMonths(dateAdd).Month.ToString();
+                    break;
+                case "{mm}":
+                    dateValue = DateTime.Today.AddMonths(dateAdd).ToString("MM");
+                    break;
+                case "{mmm}":
+                    dateValue = DateTime.Today.AddMonths(dateAdd).ToString("MMM");
+                    break;
+                case "{mmmm}":
+                    dateValue = DateTime.Today.AddMonths(dateAdd).ToString("MMMM");
+                    break;
+                case "{yy}":
+                    dateValue = DateTime.Today.AddYears(dateAdd).ToString("yy");
+                    break;
+                case "{yyyy}":
+                    dateValue = DateTime.Today.AddYears(dateAdd).ToString("yyyy");
+                    break;
+            }
+
+            return dateValue;
+        }
+
 
         /// <summary>
         ///     Configure Abstract API Holidays for this instance
