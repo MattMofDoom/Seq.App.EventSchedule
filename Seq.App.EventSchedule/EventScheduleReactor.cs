@@ -344,26 +344,29 @@ namespace Seq.App.EventSchedule
                         _scheduleInterval.TotalSeconds);
             }
 
-            if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken))
-                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...");
-            var tokens = (MultiLogToken ?? "")
-                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.Trim())
-                .ToList();
-            foreach (var token in tokens)
-                if (token.Contains("="))
-                {
-                    var x = token.Split('=');
-                    LogTokenLookup.Add(x[0], x[1]);
-                    if (_diagnostics)
-                        LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
-                }
-                else
-                {
-                    LogTokenLookup.Add(token, token);
-                    if (_diagnostics)
-                        LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", token, token);
-                }
+            if (!string.IsNullOrEmpty(MultiLogToken))
+            {
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...");
+                var tokens = (MultiLogToken ?? "")
+                    .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .ToList();
+                foreach (var token in tokens)
+                    if (token.Contains("="))
+                    {
+                        var x = token.Split('=');
+                        LogTokenLookup.Add(x[0], x[1]);
+                        if (_diagnostics)
+                            LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
+                    }
+                    else
+                    {
+                        LogTokenLookup.Add(token, token);
+                        if (_diagnostics)
+                            LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", token, token);
+                    }
+            }
 
             LogEvent(LogEventLevel.Debug,
                 "Use Holidays API {UseHolidays}, Country {Country}, Has API key {IsEmpty} ...", UseHolidays, Country,
@@ -441,6 +444,7 @@ namespace Seq.App.EventSchedule
             {
                 if (Responders.Contains('='))
                 {
+                    LogEvent(LogEventLevel.Debug, "Convert Responders to dictionary ...");
                     var responderList = (Responders ?? "")
                         .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                         .Select(t => t.Trim())
