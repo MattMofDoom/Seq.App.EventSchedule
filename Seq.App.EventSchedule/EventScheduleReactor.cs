@@ -981,8 +981,9 @@ namespace Seq.App.EventSchedule
         {
             if (_includeApp) message = "[{AppName}] -" + message;
 
-            var responder = _responders;
+            var responder = string.Empty;
             if (_responderLookup.Count > 0)
+            {
                 if (token != null)
                     foreach (var responderPair in from responderPair in _responderLookup
                         let tokenPair = (KeyValuePair<string, string>) token
@@ -992,6 +993,10 @@ namespace Seq.App.EventSchedule
                         responder = responderPair.Value;
                         break;
                     }
+            }
+            else
+                responder = _responders;
+
 
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags, token)).ForContext("AppName", App.Title)
