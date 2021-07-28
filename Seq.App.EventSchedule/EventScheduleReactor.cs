@@ -487,8 +487,9 @@ namespace Seq.App.EventSchedule
                     //Check the interval time versus threshold count
                     if (!EventLogged || _repeatSchedule && difference.TotalSeconds > _scheduleInterval.TotalSeconds)
                     {
-                        if (MultiLogToken.Any())
+                        if (_logTokens.Any())
                         {
+                            //Log multiple events
                             foreach (var token in _logTokens)
                             {
                                 var message = HandleTokens(_alertMessage, token);
