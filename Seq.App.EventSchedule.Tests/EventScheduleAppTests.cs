@@ -259,7 +259,9 @@ namespace Seq.App.EventSchedule.Tests
         [Fact]
         public void MultiLogTokenHandling()
         {
-            Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}", "Superior Power") == "This is a test with Superior Power");
+            var x = new KeyValuePair<string, string>("POWERS", "Superior Power");
+            Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}! {LogTokenLong} for logging events!", x) ==
+                        $"This is a test with {x.Key}! {x.Value} for logging events!");
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Seq.App.EventSchedule
         private DateTime _lastUpdate;
         private string[] _localAddresses;
         private List<string> _localeMatch;
-        private List<string> _logTokens;
+        private Dictionary<string,string> _logTokens;
 
         private string _priority;
         private string _projectKey;
@@ -105,8 +105,8 @@ namespace Seq.App.EventSchedule
 
         [SeqAppSetting(DisplayName = "Multi-log Token",
             HelpText =
-                "Optional comma-delimited list of values that can be referenced as {LogToken} in Message, Description, and Tags. If specified, this will create log entries for each value.",
-            IsOptional = true)]
+                "Optional comma-delimited list of values (Value, or Value=Long Value) that can be referenced as {LogToken} and {LogTokenLong} in Message, Description, and Tags. If specified, this will create log entries for each value.",
+            IsOptional = true, InputType = SettingInputType.LongText)]
         public string MultiLogToken { get; set; }
 
         [SeqAppSetting(DisplayName = "Log level for scheduled logs",
@@ -332,11 +332,23 @@ namespace Seq.App.EventSchedule
             }
 
             if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken))
-                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens '{MultiLogToken}' to array ...", MultiLogToken);
-            _logTokens = (MultiLogToken ?? "")
+                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens '{MultiLogToken}' to dictionary ...", MultiLogToken);
+            List<string> tokens = (MultiLogToken ?? "")
                 .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
                 .ToList();
+            foreach (var token in tokens)
+            {
+                if (token.Contains("="))
+                {
+                    var x = token.Split('=');
+                    _logTokens.Add(x[0], x[1]);
+                }
+                else
+                {
+                    _logTokens.Add(token, token);
+                }
+            }
 
             LogEvent(LogEventLevel.Debug,
                 "Use Holidays API {UseHolidays}, Country {Country}, Has API key {IsEmpty} ...", UseHolidays, Country,
@@ -560,7 +572,7 @@ namespace Seq.App.EventSchedule
             return values.Select(x => HandleTokens(x)).ToList();
         }
 
-        public static string HandleTokens(string value, string token = null)
+        public static string HandleTokens(string value, KeyValuePair<string,string>? token = null)
         {
             var replaceValue = GetDateExpressionToken(value);
             var replaceParams = new List<string>
@@ -583,8 +595,10 @@ namespace Seq.App.EventSchedule
                 replaceValue = GetDateToken(replaceValue, tokenMatch, replaceToken);
             }
 
-            if (!string.IsNullOrEmpty(token))
-                replaceValue = Regex.Replace(replaceValue, "{LogToken}", token);
+            if (token == null) return replaceValue;
+            var tokenPair = (KeyValuePair<string, string>) token;
+            replaceValue = Regex.Replace(replaceValue, "{LogToken}", tokenPair.Key);
+            replaceValue = Regex.Replace(replaceValue, "{LogTokenLong}", tokenPair.Value);
 
             return replaceValue;
         }
