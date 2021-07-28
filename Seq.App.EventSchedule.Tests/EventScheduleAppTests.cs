@@ -255,5 +255,11 @@ namespace Seq.App.EventSchedule.Tests
             _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
             Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
         }
+
+        [Fact]
+        public void MultiLogTokenHandling()
+        {
+            Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}", "Superior Power") == "This is a test with Superior Power");
+        }
     }
 }
