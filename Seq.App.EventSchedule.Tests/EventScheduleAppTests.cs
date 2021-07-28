@@ -266,5 +266,15 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}! {LogTokenLong} for logging events!", x) ==
                         $"This is a test with {x.Key}! {x.Value} for logging events!");
         }
+
+        [Fact]
+        public void ValidDateExpression()
+        {
+            Assert.True(EventScheduleReactor.SetValidExpression("1d1h1m") =="1d 1h 1m");
+            Assert.True(EventScheduleReactor.SetValidExpression("1d") == "1d");
+            Assert.True(EventScheduleReactor.SetValidExpression("1d1m") == "1d 1m");
+            Assert.True(EventScheduleReactor.SetValidExpression("1m") == "1m");
+            Assert.True(EventScheduleReactor.SetValidExpression("1h") == "1h");
+        }
     }
 }

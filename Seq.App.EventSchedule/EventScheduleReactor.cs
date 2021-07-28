@@ -485,16 +485,33 @@ namespace Seq.App.EventSchedule
             }
 
             if (!string.IsNullOrEmpty(ProjectKey))
+            {
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Set Project Key to {Value}", ProjectKey);
                 _projectKey = ProjectKey;
+            }
 
             if (!string.IsNullOrEmpty(InitialTimeEstimate) && ValidDateExpression(InitialTimeEstimate))
-                _initialTimeEstimate = InitialTimeEstimate;
+            {
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Set Initial Time Estimate to {Value}", SetValidExpression(InitialTimeEstimate));
+                _initialTimeEstimate = SetValidExpression(InitialTimeEstimate);
+            }
 
-            if (!string.IsNullOrEmpty(RemainingTimeEstimate))
-                _remainingTimeEstimate = RemainingTimeEstimate;
+            if (!string.IsNullOrEmpty(RemainingTimeEstimate) && ValidDateExpression(RemainingTimeEstimate))
+            {
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Set Remaining Time Estimate to {Value}", SetValidExpression(RemainingTimeEstimate));
+                _remainingTimeEstimate = SetValidExpression(RemainingTimeEstimate);
+            }
 
             if (!string.IsNullOrEmpty(DueDate) && (ValidDateExpression(DueDate) || ValidDate(DueDate)))
+            {
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Set Due Date to {Value}",
+                        ValidDate(DueDate) ? DueDate : SetValidExpression(DueDate));
                 _dueDate = DueDate;
+            }
 
             if (_diagnostics)
                 LogEvent(LogEventLevel.Debug,
@@ -623,7 +640,21 @@ namespace Seq.App.EventSchedule
 
         public static bool ValidDateExpression(string value)
         {
-            return Regex.IsMatch(value, "^((?:(\\d+)d\\s)?(?:(\\d+)h\\s)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(value, "^((?:(\\d+)d\\s?)?(?:(\\d+)h\\s?)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
+        }
+
+        public static string SetValidExpression(string value)
+        {
+            var match = Regex.Match(value, "^((?:(\\d+)d\\s?)?(?:(\\d+)h\\s?)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
+            StringBuilder s = new StringBuilder();
+            if (!string.IsNullOrEmpty(match.Groups[2].Value))
+                s.AppendFormat("{0}d ", match.Groups[2].Value);
+            if (!string.IsNullOrEmpty(match.Groups[3].Value))
+                s.AppendFormat("{0}h ", match.Groups[3].Value);
+            if (!string.IsNullOrEmpty(match.Groups[4].Value))
+                s.AppendFormat("{0}m", match.Groups[4].Value);
+
+            return s.ToString().Trim();
         }
 
         private static IEnumerable<string> HandleTokens(IEnumerable<string> values,
