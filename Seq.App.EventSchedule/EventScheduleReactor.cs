@@ -19,9 +19,9 @@ namespace Seq.App.EventSchedule
     // ReSharper disable once UnusedType.Global
     public class EventScheduleReactor : SeqApp
     {
-        private readonly Dictionary<string, string> _logTokens = new Dictionary<string, string>();
-        private readonly Dictionary<string, string> _responderLookup = new Dictionary<string, string>();
-        private static readonly Dictionary<string, string> _customTokens = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> LogTokenLookup = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> ResponderLookup = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> CustomTokenLookup = new Dictionary<string, string>();
         private string _alertDescription;
         private string _alertMessage;
         private string _apiKey;
@@ -186,7 +186,7 @@ namespace Seq.App.EventSchedule
                 "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
         public bool IncludeDescription { get; set; } = false;
 
-        
+
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Custom token list",
@@ -345,8 +345,7 @@ namespace Seq.App.EventSchedule
             }
 
             if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken))
-                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...",
-                    MultiLogToken);
+                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...");
             var tokens = (MultiLogToken ?? "")
                 .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
@@ -355,13 +354,13 @@ namespace Seq.App.EventSchedule
                 if (token.Contains("="))
                 {
                     var x = token.Split('=');
-                    _logTokens.Add(x[0], x[1]);
+                    LogTokenLookup.Add(x[0], x[1]);
                     if (_diagnostics)
                         LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
                 }
                 else
                 {
-                    _logTokens.Add(token, token);
+                    LogTokenLookup.Add(token, token);
                     if (_diagnostics)
                         LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", token, token);
                 }
@@ -440,7 +439,7 @@ namespace Seq.App.EventSchedule
 
             if (!string.IsNullOrEmpty(Responders))
             {
-                if (Responders.Contains(',') && Responders.Contains('='))
+                if (Responders.Contains('='))
                 {
                     var responderList = (Responders ?? "")
                         .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
@@ -450,7 +449,7 @@ namespace Seq.App.EventSchedule
                         where responder.Contains("=")
                         select responder.Split('='))
                     {
-                        _responderLookup.Add(x[0], x[1]);
+                        ResponderLookup.Add(x[0], x[1]);
                         if (_diagnostics)
                             LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {Responder}", x[0], x[1]);
                     }
@@ -465,7 +464,9 @@ namespace Seq.App.EventSchedule
 
             if (!string.IsNullOrEmpty(CustomTokens))
             {
-                if (CustomTokens.Contains(',') && CustomTokens.Contains('='))
+                if (_diagnostics)
+                    LogEvent(LogEventLevel.Debug, "Convert Custom Tokens to dictionary ...");
+                if (CustomTokens.Contains('='))
                 {
                     var tokenList = (CustomTokens ?? "")
                         .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
@@ -475,9 +476,10 @@ namespace Seq.App.EventSchedule
                         where responder.Contains("=")
                         select responder.Split('='))
                     {
-                        _customTokens.Add(x[0], x[1]);
+                        var key = x[0].Replace("{", "").Replace("}", "");
+                        CustomTokenLookup.Add(key, x[1]);
                         if (_diagnostics)
-                            LogEvent(LogEventLevel.Debug, "Add mapping for \\{{CustomToken}\\} to {Value}", x[0], x[1]);
+                            LogEvent(LogEventLevel.Debug, "Add mapping for {{{CustomToken}}} to {Value}", key, x[1]);
                     }
                 }
             }
@@ -556,10 +558,10 @@ namespace Seq.App.EventSchedule
                     //Check the interval time versus threshold count
                     if (!EventLogged || _repeatSchedule && difference.TotalSeconds > _scheduleInterval.TotalSeconds)
                     {
-                        if (_logTokens.Any())
+                        if (LogTokenLookup.Any())
                         {
                             //Log multiple events
-                            foreach (var token in _logTokens)
+                            foreach (var token in LogTokenLookup)
                             {
                                 var message = HandleTokens(_alertMessage, token);
                                 var description = HandleTokens(_alertDescription, token);
@@ -653,14 +655,8 @@ namespace Seq.App.EventSchedule
                 replaceValue = GetDateToken(replaceValue, tokenMatch, replaceToken);
             }
 
-            foreach (var replaceToken in _customTokens)
-            {
-                var customPair = replaceToken;
-                if (!replaceToken.Key.StartsWith("{") && !replaceToken.Key.EndsWith("}"))
-                    replaceValue = Regex.Replace(replaceValue, "{" + customPair.Key + "}", customPair.Value);
-                else
-                    replaceValue = Regex.Replace(replaceValue, customPair.Key, customPair.Value);
-            }
+            replaceValue = CustomTokenLookup.Aggregate(replaceValue,
+                (current, customPair) => Regex.Replace(current, $"{{{customPair.Key}}}", customPair.Value));
 
             if (token == null) return replaceValue;
             var tokenPair = (KeyValuePair<string, string>) token;
@@ -1021,10 +1017,10 @@ namespace Seq.App.EventSchedule
             if (_includeApp) message = "[{AppName}] -" + message;
 
             var responder = string.Empty;
-            if (_responderLookup.Count > 0)
+            if (ResponderLookup.Count > 0)
             {
                 if (token != null)
-                    foreach (var responderPair in from responderPair in _responderLookup
+                    foreach (var responderPair in from responderPair in ResponderLookup
                         let tokenPair = (KeyValuePair<string, string>) token
                         where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase)
                         select responderPair)
@@ -1034,7 +1030,9 @@ namespace Seq.App.EventSchedule
                     }
             }
             else
+            {
                 responder = _responders;
+            }
 
 
             if (_isTags)
@@ -1044,7 +1042,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("Message", message)
-                    .ForContext("Description", description).ForContext("MultiLogTokens", _logTokens)
+                    .ForContext("Description", description).ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
                             ? "{Message}"
@@ -1056,7 +1054,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("Message", message).ForContext("Description", description)
-                    .ForContext("MultiLogTokens", _logTokens)
+                    .ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
                             ? "{Message}"
@@ -1088,7 +1086,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", _logTokens)
+                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
@@ -1096,7 +1094,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext("MultiLogTokens", _logTokens)
+                    .ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
         }
 
@@ -1125,7 +1123,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", _logTokens)
+                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
@@ -1133,7 +1131,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext("MultiLogTokens", _logTokens)
+                    .ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
         }
     }

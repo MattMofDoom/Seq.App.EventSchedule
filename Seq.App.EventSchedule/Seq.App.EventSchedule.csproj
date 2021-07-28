@@ -26,7 +26,7 @@
 - Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
 - Allow Responders to be mapped to the {LogToken} key
 - Allow defining custom tokens for Message, Description, and Tags</PackageReleaseNotes>
-    <Version>1.0.15</Version>
+    <Version>1.0.16</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 
