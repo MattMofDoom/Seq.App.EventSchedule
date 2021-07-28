@@ -19,6 +19,8 @@ namespace Seq.App.EventSchedule
     // ReSharper disable once UnusedType.Global
     public class EventScheduleReactor : SeqApp
     {
+        private readonly Dictionary<string, string> _logTokens = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _responderLookup = new Dictionary<string, string>();
         private string _alertDescription;
         private string _alertMessage;
         private string _apiKey;
@@ -46,7 +48,6 @@ namespace Seq.App.EventSchedule
         private DateTime _lastUpdate;
         private string[] _localAddresses;
         private List<string> _localeMatch;
-        private readonly Dictionary<string,string> _logTokens = new Dictionary<string, string>();
 
         private string _priority;
         private string _projectKey;
@@ -56,7 +57,6 @@ namespace Seq.App.EventSchedule
         private string _remainingTimeEstimate;
         private bool _repeatSchedule;
         private string _responders;
-        private Dictionary<string, string> _responderLookup = new Dictionary<string, string>();
         private int _retryCount;
 
         private TimeSpan _scheduleInterval;
@@ -121,7 +121,8 @@ namespace Seq.App.EventSchedule
         public string Priority { get; set; }
 
         [SeqAppSetting(DisplayName = "Responders for scheduled logs",
-            HelpText = "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder.",
+            HelpText =
+                "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder.",
             IsOptional = true)]
         public string Responders { get; set; }
 
@@ -333,23 +334,26 @@ namespace Seq.App.EventSchedule
             }
 
             if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken))
-                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens '{MultiLogToken}' to dictionary ...", MultiLogToken);
-            List<string> tokens = (MultiLogToken ?? "")
+                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...",
+                    MultiLogToken);
+            var tokens = (MultiLogToken ?? "")
                 .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
                 .ToList();
             foreach (var token in tokens)
-            {
                 if (token.Contains("="))
                 {
                     var x = token.Split('=');
                     _logTokens.Add(x[0], x[1]);
+                    if (_diagnostics)
+                        LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
                 }
                 else
                 {
                     _logTokens.Add(token, token);
+                    if (_diagnostics)
+                        LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", token, token);
                 }
-            }
 
             LogEvent(LogEventLevel.Debug,
                 "Use Holidays API {UseHolidays}, Country {Country}, Has API key {IsEmpty} ...", UseHolidays, Country,
@@ -435,11 +439,17 @@ namespace Seq.App.EventSchedule
                         where responder.Contains("=")
                         select responder.Split('='))
                     {
-                        _logTokens.Add(x[0], x[1]);
+                        _responderLookup.Add(x[0], x[1]);
+                        if (_diagnostics)
+                            LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {Responder}", x[0], x[1]);
                     }
                 }
                 else
+                {
                     _responders = Responders;
+                    if (_diagnostics)
+                        LogEvent(LogEventLevel.Debug, "Set responder to {Responder}", _responders);
+                }
             }
 
             if (!string.IsNullOrEmpty(ProjectKey))
@@ -584,12 +594,13 @@ namespace Seq.App.EventSchedule
             return Regex.IsMatch(value, "^((?:(\\d+)d\\s)?(?:(\\d+)h\\s)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
         }
 
-        private static IEnumerable<string> HandleTokens(IEnumerable<string> values, KeyValuePair<string,string>? token = null)
+        private static IEnumerable<string> HandleTokens(IEnumerable<string> values,
+            KeyValuePair<string, string>? token = null)
         {
             return values.Select(x => HandleTokens(x, token)).ToList();
         }
 
-        public static string HandleTokens(string value, KeyValuePair<string,string>? token = null)
+        public static string HandleTokens(string value, KeyValuePair<string, string>? token = null)
         {
             var replaceValue = GetDateExpressionToken(value);
             var replaceParams = new List<string>
@@ -964,20 +975,23 @@ namespace Seq.App.EventSchedule
         /// <param name="logLevel"></param>
         /// <param name="message"></param>
         /// <param name="description"></param>
-        private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description, KeyValuePair<string,string>? token = null)
+        /// <param name="token"></param>
+        private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description,
+            KeyValuePair<string, string>? token = null)
         {
             if (_includeApp) message = "[{AppName}] -" + message;
 
-            string responder = _responders;
+            var responder = _responders;
             if (_responderLookup.Count > 0)
-            {
-                if (token!=null)
-                    foreach (var responderPair in from responderPair in _responderLookup let tokenPair = (KeyValuePair<string, string>) token where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase) select responderPair)
+                if (token != null)
+                    foreach (var responderPair in from responderPair in _responderLookup
+                        let tokenPair = (KeyValuePair<string, string>) token
+                        where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase)
+                        select responderPair)
                     {
                         responder = responderPair.Value;
                         break;
                     }
-            }
 
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags, token)).ForContext("AppName", App.Title)
