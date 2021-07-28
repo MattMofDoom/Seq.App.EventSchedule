@@ -510,7 +510,7 @@ namespace Seq.App.EventSchedule
                 if (_diagnostics)
                     LogEvent(LogEventLevel.Debug, "Set Due Date to {Value}",
                         ValidDate(DueDate) ? DueDate : SetValidExpression(DueDate));
-                _dueDate = DueDate;
+                _dueDate = ValidDate(DueDate) ? DueDate : SetValidExpression(DueDate);
             }
 
             if (_diagnostics)
