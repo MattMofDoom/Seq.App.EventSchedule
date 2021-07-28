@@ -56,6 +56,7 @@ namespace Seq.App.EventSchedule
         private string _remainingTimeEstimate;
         private bool _repeatSchedule;
         private string _responders;
+        private Dictionary<string, string> _responderLookup = new Dictionary<string, string>();
         private int _retryCount;
 
         private TimeSpan _scheduleInterval;
@@ -120,7 +121,7 @@ namespace Seq.App.EventSchedule
         public string Priority { get; set; }
 
         [SeqAppSetting(DisplayName = "Responders for scheduled logs",
-            HelpText = "Optional Responders property to pass for scheduled logs, for use with other apps.",
+            HelpText = "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder.",
             IsOptional = true)]
         public string Responders { get; set; }
 
@@ -423,7 +424,23 @@ namespace Seq.App.EventSchedule
                 _priority = Priority;
 
             if (!string.IsNullOrEmpty(Responders))
-                _responders = Responders;
+            {
+                if (Responders.Contains(',') && Responders.Contains('='))
+                {
+                    var responderList = (Responders ?? "")
+                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(t => t.Trim())
+                        .ToList();
+                    foreach (var x in from responder in responderList
+                        where responder.Contains("=")
+                        select responder.Split('='))
+                    {
+                        _logTokens.Add(x[0], x[1]);
+                    }
+                }
+                else
+                    _responders = Responders;
+            }
 
             if (!string.IsNullOrEmpty(ProjectKey))
                 _projectKey = ProjectKey;
@@ -508,7 +525,7 @@ namespace Seq.App.EventSchedule
                                 var description = HandleTokens(_alertDescription, token);
 
                                 //Log event
-                                ScheduledLogEvent(_thresholdLogLevel, message, description);
+                                ScheduledLogEvent(_thresholdLogLevel, message, description, token);
                             }
                         }
                         else
@@ -567,9 +584,9 @@ namespace Seq.App.EventSchedule
             return Regex.IsMatch(value, "^((?:(\\d+)d\\s)?(?:(\\d+)h\\s)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
         }
 
-        private static IEnumerable<string> HandleTokens(IEnumerable<string> values)
+        private static IEnumerable<string> HandleTokens(IEnumerable<string> values, KeyValuePair<string,string>? token = null)
         {
-            return values.Select(x => HandleTokens(x)).ToList();
+            return values.Select(x => HandleTokens(x, token)).ToList();
         }
 
         public static string HandleTokens(string value, KeyValuePair<string,string>? token = null)
@@ -947,14 +964,24 @@ namespace Seq.App.EventSchedule
         /// <param name="logLevel"></param>
         /// <param name="message"></param>
         /// <param name="description"></param>
-        private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description)
+        private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description, KeyValuePair<string,string>? token = null)
         {
             if (_includeApp) message = "[{AppName}] -" + message;
 
+            string responder = _responders;
+            if (_responderLookup.Count > 0)
+            {
+                if (token!=null)
+                    foreach (var responderPair in from responderPair in _responderLookup let tokenPair = (KeyValuePair<string, string>) token where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase) select responderPair)
+                    {
+                        responder = responderPair.Value;
+                        break;
+                    }
+            }
 
             if (_isTags)
-                Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
-                    .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
+                Log.ForContext(nameof(Tags), HandleTokens(_tags, token)).ForContext("AppName", App.Title)
+                    .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), responder)
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
@@ -966,7 +993,7 @@ namespace Seq.App.EventSchedule
                             : "{Message} : {Description}");
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
-                    .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
+                    .ForContext(nameof(Responders), responder).ForContext(nameof(LogCount), LogCount)
                     .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)

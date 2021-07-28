@@ -23,8 +23,9 @@
 - Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
 - Multiple date expression tokens are permitted
 - Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
-- Allow logging multiple log entries with variable outputs using the {LogToken} token that can be used in Message, Description, and Tags.</PackageReleaseNotes>
-    <Version>1.0.12</Version>
+- Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
+- Allow Responders to be mapped to the {LogToken} key</PackageReleaseNotes>
+    <Version>1.0.13</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 
