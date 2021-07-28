@@ -36,6 +36,7 @@ namespace Seq.App.EventSchedule.Tests
             //Wait for showtime
             Thread.Sleep(2000);
             _testOutputHelper.WriteLine("Event Logged: {0}", app.EventLogged);
+            Assert.True(app.EventLogged);
         }
 
         [Fact]

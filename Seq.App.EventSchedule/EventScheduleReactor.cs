@@ -46,7 +46,7 @@ namespace Seq.App.EventSchedule
         private DateTime _lastUpdate;
         private string[] _localAddresses;
         private List<string> _localeMatch;
-        private Dictionary<string,string> _logTokens;
+        private readonly Dictionary<string,string> _logTokens = new Dictionary<string, string>();
 
         private string _priority;
         private string _projectKey;
