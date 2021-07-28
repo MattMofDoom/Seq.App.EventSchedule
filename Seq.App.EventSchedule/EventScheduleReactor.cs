@@ -21,6 +21,7 @@ namespace Seq.App.EventSchedule
     {
         private readonly Dictionary<string, string> _logTokens = new Dictionary<string, string>();
         private readonly Dictionary<string, string> _responderLookup = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> _customTokens = new Dictionary<string, string>();
         private string _alertDescription;
         private string _alertMessage;
         private string _apiKey;
@@ -123,7 +124,8 @@ namespace Seq.App.EventSchedule
         [SeqAppSetting(DisplayName = "Responders for scheduled logs",
             HelpText =
                 "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder.",
-            IsOptional = true)]
+            IsOptional = true,
+            InputType = SettingInputType.LongText)]
         public string Responders { get; set; }
 
         [SeqAppSetting(DisplayName = "Project Key for scheduled logs",
@@ -183,6 +185,15 @@ namespace Seq.App.EventSchedule
             HelpText =
                 "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
         public bool IncludeDescription { get; set; } = false;
+
+        
+        [SeqAppSetting(
+            IsOptional = true,
+            DisplayName = "Custom token list",
+            HelpText =
+                "Comma-delimited key pair (TagName=Value) that allows you to specify {TagName} in Message, Description, or Tags.",
+            InputType = SettingInputType.LongText)]
+        public string CustomTokens { get; set; }
 
         [SeqAppSetting(
             IsOptional = true,
@@ -452,6 +463,25 @@ namespace Seq.App.EventSchedule
                 }
             }
 
+            if (!string.IsNullOrEmpty(CustomTokens))
+            {
+                if (CustomTokens.Contains(',') && CustomTokens.Contains('='))
+                {
+                    var tokenList = (CustomTokens ?? "")
+                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(t => t.Trim())
+                        .ToList();
+                    foreach (var x in from responder in tokenList
+                        where responder.Contains("=")
+                        select responder.Split('='))
+                    {
+                        _customTokens.Add(x[0], x[1]);
+                        if (_diagnostics)
+                            LogEvent(LogEventLevel.Debug, "Add mapping for \\{{CustomToken}\\} to {Value}", x[0], x[1]);
+                    }
+                }
+            }
+
             if (!string.IsNullOrEmpty(ProjectKey))
                 _projectKey = ProjectKey;
 
@@ -621,6 +651,15 @@ namespace Seq.App.EventSchedule
             {
                 var tokenMatch = Regex.Match(replaceToken, "\\{([dmy]+)\\}", RegexOptions.IgnoreCase);
                 replaceValue = GetDateToken(replaceValue, tokenMatch, replaceToken);
+            }
+
+            foreach (var replaceToken in _customTokens)
+            {
+                var customPair = replaceToken;
+                if (!replaceToken.Key.StartsWith("{") && !replaceToken.Key.EndsWith("}"))
+                    replaceValue = Regex.Replace(replaceValue, "{" + customPair.Key + "}", customPair.Value);
+                else
+                    replaceValue = Regex.Replace(replaceValue, customPair.Key, customPair.Value);
             }
 
             if (token == null) return replaceValue;
