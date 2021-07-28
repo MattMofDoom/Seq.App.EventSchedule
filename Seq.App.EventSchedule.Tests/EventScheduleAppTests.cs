@@ -35,6 +35,7 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             //Wait for showtime
             Thread.Sleep(2000);
+            _testOutputHelper.WriteLine("Event Logged: {0}", app.EventLogged);
             Assert.True(app.EventLogged);
         }
 
@@ -254,6 +255,14 @@ namespace Seq.App.EventSchedule.Tests
 
             _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
             Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
+        }
+
+        [Fact]
+        public void MultiLogTokenHandling()
+        {
+            var x = new KeyValuePair<string, string>("POWERS", "Superior Power");
+            Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}! {LogTokenLong} for logging events!", x) ==
+                        $"This is a test with {x.Key}! {x.Value} for logging events!");
         }
     }
 }

@@ -21,8 +21,10 @@
 - Always include Message and Description properties for the scheduled log events
 - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
 - Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
-- Multiple date expression tokens are permitted</PackageReleaseNotes>
-    <Version>1.0.11</Version>
+- Multiple date expression tokens are permitted
+- Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
+- Allow logging multiple log entries with variable outputs using the {LogToken} token that can be used in Message, Description, and Tags.</PackageReleaseNotes>
+    <Version>1.0.12</Version>
     <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
   </PropertyGroup>
 
