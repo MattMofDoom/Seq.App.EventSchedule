@@ -26,6 +26,7 @@ namespace Seq.App.EventSchedule
         private string _country;
         private List<DayOfWeek> _daysOfWeek;
         private bool _diagnostics;
+        private string _dueDate;
         private DateTime _endTime;
         private int _errorCount;
         private List<int> _excludeDays;
@@ -35,11 +36,8 @@ namespace Seq.App.EventSchedule
         private List<int> _includeDays;
         private bool _includeDescription;
         private bool _includeWeekends;
-        private string _projectKey;
         private string _initialTimeEstimate;
-        private string _remainingTimeEstimate;
-        private string _dueDate;
-        
+
         private bool _isTags;
         private bool _isUpdating;
         private DateTime _lastDay;
@@ -47,13 +45,15 @@ namespace Seq.App.EventSchedule
         private DateTime _lastLog;
         private DateTime _lastUpdate;
         private string[] _localAddresses;
-        private List<string> LogTokens;
         private List<string> _localeMatch;
+        private List<string> _logTokens;
 
         private string _priority;
+        private string _projectKey;
         private string _proxy;
         private string _proxyPass;
         private string _proxyUser;
+        private string _remainingTimeEstimate;
         private bool _repeatSchedule;
         private string _responders;
         private int _retryCount;
@@ -104,7 +104,8 @@ namespace Seq.App.EventSchedule
         public int ScheduleInterval { get; set; } = 60;
 
         [SeqAppSetting(DisplayName = "Multi-log Token",
-            HelpText = "Optional comma-delimited list of values that can be referenced as {LogToken} in Message, Description, and Tags. If specified, this will create log entries for each value.",
+            HelpText =
+                "Optional comma-delimited list of values that can be referenced as {LogToken} in Message, Description, and Tags. If specified, this will create log entries for each value.",
             IsOptional = true)]
         public string MultiLogToken { get; set; }
 
@@ -330,8 +331,9 @@ namespace Seq.App.EventSchedule
                         _scheduleInterval.TotalSeconds);
             }
 
-            if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken)) LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens '{MultiLogToken}' to array ...", MultiLogToken);
-            LogTokens = (MultiLogToken ?? "")
+            if (_diagnostics && !string.IsNullOrEmpty(MultiLogToken))
+                LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens '{MultiLogToken}' to array ...", MultiLogToken);
+            _logTokens = (MultiLogToken ?? "")
                 .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
                 .ToList();
@@ -486,7 +488,8 @@ namespace Seq.App.EventSchedule
                     if (!EventLogged || _repeatSchedule && difference.TotalSeconds > _scheduleInterval.TotalSeconds)
                     {
                         if (MultiLogToken.Any())
-                            foreach (var token in LogTokens)
+                        {
+                            foreach (var token in _logTokens)
                             {
                                 var message = HandleTokens(_alertMessage, token);
                                 var description = HandleTokens(_alertDescription, token);
@@ -494,6 +497,7 @@ namespace Seq.App.EventSchedule
                                 //Log event
                                 ScheduledLogEvent(_thresholdLogLevel, message, description);
                             }
+                        }
                         else
                         {
                             var message = HandleTokens(_alertMessage);
@@ -550,19 +554,6 @@ namespace Seq.App.EventSchedule
             return Regex.IsMatch(value, "^((?:(\\d+)d\\s)?(?:(\\d+)h\\s)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
         }
 
-        public static string CalculateDateExpression(string value)
-        {
-            var date = DateTime.Today;
-            var match = Regex.Match(value, "^((?:(\\d+)d\\s)?(?:(\\d+)h\\s)?(?:(\\d+)m)?)$", RegexOptions.IgnoreCase);
-            if (!string.IsNullOrEmpty(match.Groups[2].Value))
-                date = date.AddDays(int.Parse(match.Groups[2].Value));
-            if (!string.IsNullOrEmpty(match.Groups[3].Value))
-                date = date.AddHours(int.Parse(match.Groups[3].Value));
-            if (!string.IsNullOrEmpty(match.Groups[4].Value))
-                date = date.AddMinutes(int.Parse(match.Groups[4].Value));
-            return date.ToString("yyyy-MM-dd");
-        }
-
         private static IEnumerable<string> HandleTokens(IEnumerable<string> values)
         {
             return values.Select(x => HandleTokens(x)).ToList();
@@ -592,7 +583,7 @@ namespace Seq.App.EventSchedule
             }
 
             if (!string.IsNullOrEmpty(token))
-            replaceValue = Regex.Replace(replaceValue, "{LogToken}", token);
+                replaceValue = Regex.Replace(replaceValue, "{LogToken}", token);
 
             return replaceValue;
         }
@@ -949,10 +940,11 @@ namespace Seq.App.EventSchedule
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("Message", message)
-                    .ForContext("Description", description).ForContext("MultiLogTokens", LogTokens)
+                    .ForContext("Description", description).ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
                             ? "{Message}"
@@ -960,10 +952,11 @@ namespace Seq.App.EventSchedule
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("Message", message).ForContext("Description", description)
-                    .ForContext("MultiLogTokens", LogTokens)
+                    .ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
                             ? "{Message}"
@@ -992,16 +985,18 @@ namespace Seq.App.EventSchedule
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokens)
+                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext("MultiLogTokens", LogTokens)
+                    .ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
         }
 
@@ -1027,16 +1022,18 @@ namespace Seq.App.EventSchedule
             if (_isTags)
                 Log.ForContext(nameof(Tags), HandleTokens(_tags)).ForContext("AppName", App.Title)
                     .ForContext(nameof(Priority), _priority).ForContext(nameof(Responders), _responders)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokens)
+                    .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
-                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate).ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
+                    .ForContext(nameof(InitialTimeEstimate), _initialTimeEstimate)
+                    .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
-                    .ForContext("MultiLogTokens", LogTokens)
+                    .ForContext("MultiLogTokens", _logTokens)
                     .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
         }
     }
