@@ -38,7 +38,7 @@ namespace Seq.App.EventSchedule.Tests.Support
             return new Host("https://seq.example.com", String());
         }
 
-        public static EventScheduleReactor Reactor(string start, int repeatInterval, bool repeat = false)
+        public static EventScheduleReactor Reactor(string start, int repeatInterval, bool repeat = false, string dayOfMonth = null)
         {
             return new EventScheduleReactor
             {
@@ -47,6 +47,7 @@ namespace Seq.App.EventSchedule.Tests.Support
                 RepeatSchedule = repeat,
                 ScheduleInterval = repeatInterval,
                 ScheduleLogLevel = "Information",
+                IncludeDaysOfMonth = dayOfMonth,
                 Priority = "P3",
                 Responders = "Everyone Ever",
                 AlertMessage = "An alert!",

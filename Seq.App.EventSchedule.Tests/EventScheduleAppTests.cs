@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
+using Lurgle.Dates;
+using Lurgle.Dates.Classes;
 using Seq.App.EventSchedule.Tests.Support;
 using Seq.App.EventSchedule.Classes;
 using Xunit;
@@ -16,6 +18,51 @@ namespace Seq.App.EventSchedule.Tests
         public EventScheduleAppTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
+        }
+
+        [Fact]
+        public void AppInclude()
+        {
+            var start = DateTime.Now.AddSeconds(1);
+            var app = Some.Reactor(start.ToString("H:mm:ss"),
+                0, dayOfMonth: start.Day.ToString());
+            app.Attach(TestAppHost.Instance);
+            var showTime = app.GetShowtime();
+            _testOutputHelper.WriteLine("Current UTC: " + DateTime.Now.ToUniversalTime().ToString("F"));
+            _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
+                                        showTime.End.ToString("F"));
+            _testOutputHelper.WriteLine("Expect Start: " + start.ToUniversalTime().ToString("F") + " to " +
+                                        start.AddHours(1).ToUniversalTime().ToString("F"));
+            Assert.True(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
+            Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
+            //Wait for showtime
+            Thread.Sleep(2000);
+            _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.EventLogged, string.Join(",", app.IncludeDays));
+            Assert.True(app.EventLogged);
+        }
+
+        [Fact]
+        public void AppNotInclude()
+        {
+            var start = DateTime.Now.AddSeconds(1);
+            var app = Some.Reactor(start.ToString("H:mm:ss"),
+                0, dayOfMonth: start.AddDays(-1).Day.ToString());
+            app.Attach(TestAppHost.Instance);
+            var showTime = app.GetShowtime();
+            _testOutputHelper.WriteLine("Current UTC: " + DateTime.Now.ToUniversalTime().ToString("F"));
+            _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
+                                        showTime.End.ToString("F"));
+            _testOutputHelper.WriteLine("Expect Start: " + start.ToUniversalTime().ToString("F") + " to " +
+                                        start.AddHours(1).ToUniversalTime().ToString("F"));
+            Thread.Sleep(2000);
+            showTime = app.GetShowtime();
+            Assert.False(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
+            Assert.False(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
+            _testOutputHelper.WriteLine("New ShowTime: " + showTime.Start.ToString("F") + " to " +
+                                        showTime.End.ToString("F"));
+            _testOutputHelper.WriteLine("New Expect Start: " + start.ToUniversalTime().ToString("F") + " to " +
+                                        start.AddHours(1).ToUniversalTime().ToString("F"));
+
         }
 
         [Fact]
@@ -214,67 +261,6 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> {holiday},
                 new List<string> {"National", "Local"}, new List<string> {"Australia", "New South Wales"}, false,
                 true).Count > 0);
-        }
-
-        [Fact]
-        public void DatesExpressed()
-        {
-            _testOutputHelper.WriteLine(string.Join(",",
-                Dates.GetDaysOfMonth("first,last,first weekday,last weekday,first monday", "12:00", "H:mm").ToArray()));
-            Assert.True(Dates.GetDaysOfMonth("first,last,first weekday,last weekday,first monday", "12:00", "H:mm")
-                .Count > 0);
-        }
-
-        [Fact]
-        public void DateTokenParse()
-        {
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d} {M} {yy}"), $"{DateTime.Today.Day} {DateTime.Today.Month} {DateTime.Today:yy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{d} {M} {yy}") ==
-                        $"{DateTime.Today.Day} {DateTime.Today.Month} {DateTime.Today:yy}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dddd-1} {d-1} {MMMM} {yyyy}"), string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1).Day, DateTime.Today));
-            Assert.True(EventScheduleReactor.HandleTokens("{dddd-1} {d-1} {MMMM} {yyyy}") == string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(-1), DateTime.Today.AddDays(-1).Day, DateTime.Today));
-            
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dddd+2} {d+2} {MMMM} {yyyy}"), string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(2), DateTime.Today.AddDays(2).Day, DateTime.Today));
-            Assert.True(EventScheduleReactor.HandleTokens("{dddd+2} {d+2} {MMMM} {yyyy}") == string.Format("{0:dddd} {1} {2:MMMM} {2:yyyy}", DateTime.Today.AddDays(2), DateTime.Today.AddDays(2).Day, DateTime.Today));
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}"), $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{d+10} {M+10} {yy-10}") == $"{DateTime.Today.AddDays(10).Day} {DateTime.Today.AddMonths(10).Month} {DateTime.Today.AddYears(-10):yy}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{d M y+10d}"), $"{DateTime.Today.AddDays(10):d M yyyy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{d M y+10d}") == $"{DateTime.Today.AddDays(10):d M y}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dd MM yy+10m}"), $"{DateTime.Today.AddMonths(10):dd MM yy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{dd MM yy+10m}") == $"{DateTime.Today.AddMonths(10):dd MM yy}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{dd MMM yyy+10y}"), $"{DateTime.Today.AddYears(10):dd MMM yyy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{dd MMM yyy+10y}") == $"{DateTime.Today.AddYears(10):dd MMM yyy}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy}");
-
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}"), $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
-            Assert.True(EventScheduleReactor.HandleTokens("{MMMM yyyy-1m} {MMMM yyyy}") == $"{DateTime.Today.AddMonths(-1):MMMM yyyy} {DateTime.Today:MMMM yyyy}");
-        }
-
-        [Fact]
-        public void MultiLogTokenHandling()
-        {
-            var x = new KeyValuePair<string, string>("POWERS", "Superior Power");
-            _testOutputHelper.WriteLine("Compare {0} with {1}", EventScheduleReactor.HandleTokens("This is a test with {LogToken}! {LogTokenLong} for logging events!", x),
-                                                                    $"This is a test with {x.Key}! {x.Value} for logging events!");
-            Assert.True(EventScheduleReactor.HandleTokens("This is a test with {LogToken}! {LogTokenLong} for logging events!", x) ==
-                        $"This is a test with {x.Key}! {x.Value} for logging events!");
-        }
-
-        [Fact]
-        public void ValidDateExpression()
-        {
-            Assert.True(EventScheduleReactor.SetValidExpression("1d1h1m") =="1d 1h 1m");
-            Assert.True(EventScheduleReactor.SetValidExpression("1d") == "1d");
-            Assert.True(EventScheduleReactor.SetValidExpression("1d1m") == "1d 1m");
-            Assert.True(EventScheduleReactor.SetValidExpression("1m") == "1m");
-            Assert.True(EventScheduleReactor.SetValidExpression("1h") == "1h");
         }
     }
 }
