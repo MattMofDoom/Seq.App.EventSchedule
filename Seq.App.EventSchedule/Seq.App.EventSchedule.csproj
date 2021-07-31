@@ -26,8 +26,9 @@
 - Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
 - Allow Responders to be mapped to the {LogToken} key
 - Allow defining custom tokens for Message, Description, and Tags</PackageReleaseNotes>
-    <Version>1.0.18</Version>
-    <!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
+    <Version>1.0.19</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -36,33 +37,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flurl" Version="3.0.2">
-      <GeneratePathProperty>true</GeneratePathProperty>
-      <Pack>true</Pack>
-    </PackageReference>
-    <PackageReference Include="Flurl.Http" Version="3.2.0">
-      <GeneratePathProperty>true</GeneratePathProperty>
-      <Pack>true</Pack>
-    </PackageReference>
+    <PackageReference Include="Lurgle.Dates" Version="1.0.3" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 
-  <Target Name="Flurl" AfterTargets="Build">
-    <Copy SourceFiles="$(PkgFlurl)\lib\$(TargetFramework)\Flurl.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(PkgFlurl_Http)\lib\$(TargetFramework)\Flurl.Http.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
   <ItemGroup>
     <None Include="../LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="$(OutDir)/**/*" Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+    <None Include="$(OutDir)/**/Flurl.Http.dll;$(OutDir)/**/Flurl.dll;$(OutDir)/**/Lurgle.Dates.dll;" Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
     <None Include="schedule.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
     <!--<None Include="./bin/release/$(TargetFramework)/Flurl.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
     <None Include="./bin/release/$(TargetFramework)/Flurl.Http.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />-->
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Enums\" />
   </ItemGroup>
 
 </Project>
