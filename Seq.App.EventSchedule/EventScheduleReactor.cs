@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Timers;
 using Lurgle.Dates;
 using Lurgle.Dates.Classes;
@@ -23,7 +21,6 @@ namespace Seq.App.EventSchedule
     {
         private static readonly Dictionary<string, string> LogTokenLookup = new Dictionary<string, string>();
         private static readonly Dictionary<string, string> ResponderLookup = new Dictionary<string, string>();
-        private static readonly Dictionary<string, string> CustomTokenLookup = new Dictionary<string, string>();
         private string _alertDescription;
         private string _alertMessage;
         private string _apiKey;
@@ -188,14 +185,6 @@ namespace Seq.App.EventSchedule
                 "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
         public bool IncludeDescription { get; set; } = false;
 
-
-        [SeqAppSetting(
-            IsOptional = true,
-            DisplayName = "Custom token list",
-            HelpText =
-                "Comma-delimited key pair (TagName=Value) that allows you to specify {TagName} in Message, Description, or Tags.",
-            InputType = SettingInputType.LongText)]
-        public string CustomTokens { get; set; }
 
         [SeqAppSetting(
             IsOptional = true,
@@ -465,28 +454,6 @@ namespace Seq.App.EventSchedule
                     _responders = Responders;
                     if (_diagnostics)
                         LogEvent(LogEventLevel.Debug, "Set responder to {Responder}", _responders);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(CustomTokens))
-            {
-                if (_diagnostics)
-                    LogEvent(LogEventLevel.Debug, "Convert Custom Tokens to dictionary ...");
-                if (CustomTokens.Contains('='))
-                {
-                    var tokenList = (CustomTokens ?? "")
-                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(t => t.Trim())
-                        .ToList();
-                    foreach (var x in from responder in tokenList
-                        where responder.Contains("=")
-                        select responder.Split('='))
-                    {
-                        var key = x[0].Replace("{", "").Replace("}", "");
-                        CustomTokenLookup.Add(key, x[1]);
-                        if (_diagnostics)
-                            LogEvent(LogEventLevel.Debug, "Add mapping for {{{CustomToken}}} to {Value}", key, x[1]);
-                    }
                 }
             }
 
