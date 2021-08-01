@@ -344,20 +344,12 @@ namespace Seq.App.EventSchedule
                     .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Trim())
                     .ToList();
-                foreach (var token in tokens)
-                    if (token.Contains("="))
-                    {
-                        var x = token.Split('=');
-                        LogTokenLookup.Add(x[0], x[1]);
-                        if (_diagnostics)
-                            LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
-                    }
-                    else
-                    {
-                        LogTokenLookup.Add(token, token);
-                        if (_diagnostics)
-                            LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", token, token);
-                    }
+                foreach (var x in from token in tokens where token.Contains("=") select token.Split('='))
+                {
+                    LogTokenLookup.Add(x[0], x[1]);
+                    if (_diagnostics)
+                        LogEvent(LogEventLevel.Debug, "Add mapping for {LogToken} to {LogTokenLong}", x[0], x[1]);
+                }
             }
 
             LogEvent(LogEventLevel.Debug,
@@ -413,7 +405,7 @@ namespace Seq.App.EventSchedule
                     _alertDescription);
 
             if (IncludeDescription != null)
-            _includeDescription = (bool)IncludeDescription;
+                _includeDescription = (bool) IncludeDescription;
 
             if (_diagnostics)
                 LogEvent(LogEventLevel.Debug, "Include Description in Log Message: '{IncludeDescription}' ...",
