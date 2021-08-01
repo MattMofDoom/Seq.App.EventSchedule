@@ -21,9 +21,9 @@ namespace Seq.App.EventSchedule.Tests
         }
 
         [Fact]
-        public void AppInclude()
+        public void AppIncludeDay()
         {
-            var start = DateTime.Now.AddSeconds(1);
+            var start = DateTime.Now.AddSeconds(2);
             var app = Some.Reactor(start.ToString("H:mm:ss"),
                 0, dayOfMonth: start.Day.ToString());
             app.Attach(TestAppHost.Instance);
@@ -36,7 +36,10 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
             Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             //Wait for showtime
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
+            _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
+                                        showTime.End.ToString("F"));
+            showTime = app.GetShowtime();
             _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.EventLogged, string.Join(",", app.IncludeDays));
             Assert.True(app.EventLogged);
         }
@@ -60,9 +63,7 @@ namespace Seq.App.EventSchedule.Tests
             Assert.False(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             _testOutputHelper.WriteLine("New ShowTime: " + showTime.Start.ToString("F") + " to " +
                                         showTime.End.ToString("F"));
-            _testOutputHelper.WriteLine("New Expect Start: " + start.ToUniversalTime().ToString("F") + " to " +
-                                        start.AddHours(1).ToUniversalTime().ToString("F"));
-
+            Assert.False(app.EventLogged);
         }
 
         [Fact]
