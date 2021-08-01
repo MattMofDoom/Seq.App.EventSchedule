@@ -31,11 +31,9 @@ namespace Seq.App.EventSchedule
         private string _dueDate;
         private DateTime _endTime;
         private int _errorCount;
-        public List<DateTime> ExcludeDays;
         private List<string> _holidayMatch;
         private bool _includeApp;
         private bool _includeBank;
-        public List<DateTime> IncludeDays;
         private bool _includeDescription;
         private bool _includeWeekends;
         private string _initialTimeEstimate;
@@ -70,7 +68,9 @@ namespace Seq.App.EventSchedule
         private bool _useHolidays;
         private bool _useProxy;
         public bool EventLogged;
+        public List<DateTime> ExcludeDays;
         public List<AbstractApiHolidays> Holidays;
+        public List<DateTime> IncludeDays;
         public bool IsShowtime;
         public int LogCount;
         public DateTime TestOverrideTime = DateTime.Now;
@@ -467,18 +467,21 @@ namespace Seq.App.EventSchedule
             if (!string.IsNullOrEmpty(InitialTimeEstimate) && DateTokens.ValidDateExpression(InitialTimeEstimate))
             {
                 if (_diagnostics)
-                    LogEvent(LogEventLevel.Debug, "Set Initial Time Estimate to {Value}", DateTokens.SetValidExpression(InitialTimeEstimate));
+                    LogEvent(LogEventLevel.Debug, "Set Initial Time Estimate to {Value}",
+                        DateTokens.SetValidExpression(InitialTimeEstimate));
                 _initialTimeEstimate = DateTokens.SetValidExpression(InitialTimeEstimate);
             }
 
             if (!string.IsNullOrEmpty(RemainingTimeEstimate) && DateTokens.ValidDateExpression(RemainingTimeEstimate))
             {
                 if (_diagnostics)
-                    LogEvent(LogEventLevel.Debug, "Set Remaining Time Estimate to {Value}", DateTokens.SetValidExpression(RemainingTimeEstimate));
+                    LogEvent(LogEventLevel.Debug, "Set Remaining Time Estimate to {Value}",
+                        DateTokens.SetValidExpression(RemainingTimeEstimate));
                 _remainingTimeEstimate = DateTokens.SetValidExpression(RemainingTimeEstimate);
             }
 
-            if (!string.IsNullOrEmpty(DueDate) && (DateTokens.ValidDateExpression(DueDate) || DateTokens.ValidDate(DueDate)))
+            if (!string.IsNullOrEmpty(DueDate) &&
+                (DateTokens.ValidDateExpression(DueDate) || DateTokens.ValidDate(DueDate)))
             {
                 if (_diagnostics)
                     LogEvent(LogEventLevel.Debug, "Set Due Date to {Value}",
@@ -605,8 +608,6 @@ namespace Seq.App.EventSchedule
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {excludedays} ...",
                     ExcludeDays.ToArray());
         }
-
- 
 
 
         /// <summary>

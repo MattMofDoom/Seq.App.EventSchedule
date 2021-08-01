@@ -5,7 +5,6 @@ using System.Threading;
 using Lurgle.Dates;
 using Lurgle.Dates.Classes;
 using Seq.App.EventSchedule.Tests.Support;
-using Seq.App.EventSchedule.Classes;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,7 +12,7 @@ namespace Seq.App.EventSchedule.Tests
 {
     public class EventScheduleAppTests
     {
-        private ITestOutputHelper _testOutputHelper;
+        private readonly ITestOutputHelper _testOutputHelper;
 
         public EventScheduleAppTests(ITestOutputHelper testOutputHelper)
         {
@@ -37,10 +36,11 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             //Wait for showtime
             Thread.Sleep(3000);
+            showTime = app.GetShowtime();
             _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
                                         showTime.End.ToString("F"));
-            showTime = app.GetShowtime();
-            _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.EventLogged, string.Join(",", app.IncludeDays));
+            _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.EventLogged,
+                string.Join(",", app.IncludeDays));
             Assert.True(app.EventLogged);
         }
 
@@ -92,7 +92,7 @@ namespace Seq.App.EventSchedule.Tests
         {
             var start = DateTime.Now.AddSeconds(1);
             var app = Some.Reactor(start.ToString("H:mm:ss"),
-                1,true);
+                1, true);
             app.Attach(TestAppHost.Instance);
             var showTime = app.GetShowtime();
             _testOutputHelper.WriteLine("Current UTC: " + DateTime.Now.ToUniversalTime().ToString("F"));
@@ -109,8 +109,8 @@ namespace Seq.App.EventSchedule.Tests
             for (var i = 1; i < 6; i++)
             {
                 Thread.Sleep(2000);
-                _testOutputHelper.WriteLine("Log count after {0} seconds: {1}", i*2, app.LogCount);
-                Assert.True(app.LogCount >= i+1 && app.LogCount <= i+5);
+                _testOutputHelper.WriteLine("Log count after {0} seconds: {1}", i * 2, app.LogCount);
+                Assert.True(app.LogCount >= i + 1 && app.LogCount <= i + 5);
             }
         }
 
@@ -182,10 +182,7 @@ namespace Seq.App.EventSchedule.Tests
                 {
                     app.TestOverrideTime = app.TestOverrideTime.AddHours(1);
 
-                    if (i % 24 == 0)
-                    {
-                        start = start.AddDays(1);
-                    }
+                    if (i % 24 == 0) start = start.AddDays(1);
                 }
 
                 var holiday = new AbstractApiHolidays("Threshold Day", "", "AU", "", "AU",
@@ -222,10 +219,7 @@ namespace Seq.App.EventSchedule.Tests
                 {
                     app.TestOverrideTime = app.TestOverrideTime.AddHours(1);
 
-                    if (i % 24 == 0)
-                    {
-                        start = start.AddDays(1);
-                    }
+                    if (i % 24 == 0) start = start.AddDays(1);
                 }
 
                 app.Holidays = new List<AbstractApiHolidays>();
@@ -239,7 +233,8 @@ namespace Seq.App.EventSchedule.Tests
                         app.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
                         showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
                     Assert.True(showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
-                    Assert.True(showTime.End.ToString("F") == start.AddDays(1).AddHours(1).ToUniversalTime().ToString("F"));
+                    Assert.True(showTime.End.ToString("F") ==
+                                start.AddDays(1).AddHours(1).ToUniversalTime().ToString("F"));
                 }
                 else
                 {
