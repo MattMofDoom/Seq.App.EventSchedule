@@ -39,7 +39,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lurgle.Dates" Version="1.0.3" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.5" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 
