@@ -28,7 +28,7 @@
 - Allow defining custom tokens for Message, Description, and Tags
 - Switch to using Lurgle.Dates as common date expression library
 - Remove custom tokens</PackageReleaseNotes>
-    <Version>1.0.20</Version>
+    <Version>1.0.21</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
