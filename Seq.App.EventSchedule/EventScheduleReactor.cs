@@ -182,8 +182,9 @@ namespace Seq.App.EventSchedule
         [SeqAppSetting(
             DisplayName = "Include description with log message",
             HelpText =
-                "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.")]
-        public bool IncludeDescription { get; set; } = false;
+                "If selected, the configured description will be part of the log message. Otherwise it will only show as a log property, which can be used by other Seq apps.",
+            IsOptional = true)]
+        public bool? IncludeDescription { get; set; } = false;
 
 
         [SeqAppSetting(
@@ -411,7 +412,9 @@ namespace Seq.App.EventSchedule
                 LogEvent(LogEventLevel.Debug, "Alert Description '{AlertDescription}' will be used ...",
                     _alertDescription);
 
-            _includeDescription = IncludeDescription;
+            if (IncludeDescription != null)
+            _includeDescription = (bool)IncludeDescription;
+
             if (_diagnostics)
                 LogEvent(LogEventLevel.Debug, "Include Description in Log Message: '{IncludeDescription}' ...",
                     _includeDescription);
