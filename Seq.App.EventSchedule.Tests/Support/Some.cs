@@ -1,6 +1,9 @@
 ﻿using System;
 using Seq.Apps;
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedType.Global
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedParameter.Global
 
@@ -38,7 +41,8 @@ namespace Seq.App.EventSchedule.Tests.Support
             return new Host("https://seq.example.com", String());
         }
 
-        public static EventScheduleReactor Reactor(string start, int repeatInterval, bool repeat = false, string dayOfMonth = null)
+        public static EventScheduleReactor Reactor(string start, int repeatInterval, bool repeat = false,
+            string dayOfMonth = null)
         {
             return new EventScheduleReactor
             {
