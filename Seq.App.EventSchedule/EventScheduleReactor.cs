@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Timers;
-using Lurgle.Dates;
+﻿using Lurgle.Dates;
 using Lurgle.Dates.Classes;
 using Seq.App.EventSchedule.Classes;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Timers;
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -830,7 +830,8 @@ namespace Seq.App.EventSchedule
         private void ScheduledLogEvent(LogEventLevel logLevel, string message, string description,
             KeyValuePair<string, string>? token = null)
         {
-            if (_includeApp) message = "[{AppName}] -" + message;
+            string include = "{AppName} - ";
+            if (!_includeApp) include = string.Empty;
 
             var responder = string.Empty;
             if (ResponderLookup.Count > 0)
@@ -861,8 +862,8 @@ namespace Seq.App.EventSchedule
                     .ForContext("Description", description).ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
-                            ? "{Message}"
-                            : "{Message} : {Description}");
+                            ? include + "{Message}"
+                            : include + "{Message} : {Description}");
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), responder).ForContext(nameof(LogCount), LogCount)
@@ -873,8 +874,8 @@ namespace Seq.App.EventSchedule
                     .ForContext("MultiLogTokens", LogTokenLookup)
                     .Write((Serilog.Events.LogEventLevel) logLevel,
                         string.IsNullOrEmpty(description) || !_includeDescription
-                            ? "{Message}"
-                            : "{Message} : {Description}");
+                            ? include + "{Message}"
+                            : include + "{Message} : {Description}");
         }
 
         /// <summary>
@@ -885,15 +886,8 @@ namespace Seq.App.EventSchedule
         /// <param name="args"></param>
         private void LogEvent(LogEventLevel logLevel, string message, params object[] args)
         {
-            var logArgsList = args.ToList();
-
-            if (_includeApp)
-            {
-                message = "[{AppName}] -" + message;
-                logArgsList.Insert(0, App.Title);
-            }
-
-            var logArgs = logArgsList.ToArray();
+            string include = "{AppName} - ";
+            if (!_includeApp) include = string.Empty;
 
 
             if (_isTags)
@@ -903,7 +897,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, $"{include}{message}", args);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
@@ -911,7 +905,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, $"{include}{message}", args);
         }
 
         /// <summary>
@@ -923,15 +917,9 @@ namespace Seq.App.EventSchedule
         /// <param name="args"></param>
         private void LogEvent(LogEventLevel logLevel, Exception exception, string message, params object[] args)
         {
-            var logArgsList = args.ToList();
+            string include = "{AppName} - ";
+            if (!_includeApp) include = string.Empty;
 
-            if (_includeApp)
-            {
-                message = "[{AppName}] -" + message;
-                logArgsList.Insert(0, App.Title);
-            }
-
-            var logArgs = logArgsList.ToArray();
 
             if (_isTags)
                 Log.ForContext(nameof(Tags), DateTokens.HandleTokens(_tags)).ForContext("AppName", App.Title)
@@ -940,7 +928,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, $"{include}{message}", args);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
@@ -948,7 +936,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, $"{include}{message}", args);
         }
     }
 }
