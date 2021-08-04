@@ -29,7 +29,7 @@
 - Switch to using Lurgle.Dates as common date expression library
 - Remove custom tokens
 - Improve appname inclusion logic</PackageReleaseNotes>
-    <Version>1.0.25</Version>
+    <Version>1.0.26</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
