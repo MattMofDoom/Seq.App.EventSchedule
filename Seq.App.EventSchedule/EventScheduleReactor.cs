@@ -886,8 +886,14 @@ namespace Seq.App.EventSchedule
         /// <param name="args"></param>
         private void LogEvent(LogEventLevel logLevel, string message, params object[] args)
         {
-            string include = "{AppName} - ";
-            if (!_includeApp) include = string.Empty;
+            var logArgsList = args.ToList();
+
+            if (_includeApp)
+            {
+                logArgsList.Insert(0, App.Title);
+            }
+
+            var logArgs = logArgsList.ToArray();
 
 
             if (_isTags)
@@ -897,7 +903,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, $"{include}{message}", args);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, _includeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
@@ -905,7 +911,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, $"{include}{message}", args);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, _includeApp ? "[{AppName}] - " + message : message, logArgs);
         }
 
         /// <summary>
@@ -917,8 +923,14 @@ namespace Seq.App.EventSchedule
         /// <param name="args"></param>
         private void LogEvent(LogEventLevel logLevel, Exception exception, string message, params object[] args)
         {
-            string include = "{AppName} - ";
-            if (!_includeApp) include = string.Empty;
+            var logArgsList = args.ToList();
+
+            if (_includeApp)
+            {
+                logArgsList.Insert(0, App.Title);
+            }
+
+            var logArgs = logArgsList.ToArray();
 
 
             if (_isTags)
@@ -928,7 +940,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext(nameof(LogCount), LogCount).ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, $"{include}{message}", args);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, _includeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), _priority)
                     .ForContext(nameof(Responders), _responders).ForContext(nameof(LogCount), LogCount)
@@ -936,7 +948,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), _remainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), _projectKey).ForContext(nameof(DueDate), _dueDate)
                     .ForContext("MultiLogTokens", LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, $"{include}{message}", args);
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, _includeApp ? "[{AppName}] - " + message : message, logArgs);
         }
     }
 }
