@@ -16,21 +16,20 @@
     <PackageTags>seq-app seq event schedule log holidays</PackageTags>
     <PackageIcon>schedule.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes>
-      - Add option to include description in log message, instead of automatically including it
-      - Add tokens to message, description, and tags for including date components in message and description
-      - Always include Message and Description properties for the scheduled log events
-      - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
-      - Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
-      - Multiple date expression tokens are permitted
-      - Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
-      - Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
-      - Allow Responders to be mapped to the {LogToken} key
-      - Allow defining custom tokens for Message, Description, and Tags
-      - Switch to using Lurgle.Dates as common date expression library
-      - Remove custom tokens
-    </PackageReleaseNotes>
-    <Version>1.0.24</Version>
+    <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
+- Add tokens to message, description, and tags for including date components in message and description
+- Always include Message and Description properties for the scheduled log events
+- Date tokens can include addition and subtraction (eg. {d+1} {M-10})
+- Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
+- Multiple date expression tokens are permitted
+- Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
+- Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
+- Allow Responders to be mapped to the {LogToken} key
+- Allow defining custom tokens for Message, Description, and Tags
+- Switch to using Lurgle.Dates as common date expression library
+- Remove custom tokens
+- Improve appname inclusion logic</PackageReleaseNotes>
+    <Version>1.0.25</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -41,7 +40,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lurgle.Dates" Version="1.0.6" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.7" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 
