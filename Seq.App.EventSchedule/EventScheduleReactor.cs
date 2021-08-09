@@ -175,6 +175,7 @@ namespace Seq.App.EventSchedule
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Scheduled log description.",
+            InputType = SettingInputType.LongText,
             HelpText =
                 "Optional description associated with the event raised. Allows tokens for date parts: Day: {d}/{dd}/{ddd}/{dddd}, Month: {M}/{MM}/{MMM}/{MMMM}, Year: {yy}/{yyyy}. These are not case sensitive.")]
         public string AlertDescription { get; set; }

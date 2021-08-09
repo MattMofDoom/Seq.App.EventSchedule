@@ -28,8 +28,9 @@
 - Allow defining custom tokens for Message, Description, and Tags
 - Switch to using Lurgle.Dates as common date expression library
 - Remove custom tokens
-- Improve appname inclusion logic</PackageReleaseNotes>
-    <Version>1.0.26</Version>
+- Improve appname inclusion logic
+- Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions</PackageReleaseNotes>
+    <Version>1.0.27</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
