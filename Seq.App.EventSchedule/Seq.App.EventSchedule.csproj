@@ -29,7 +29,8 @@
 - Switch to using Lurgle.Dates as common date expression library
 - Remove custom tokens
 - Improve appname inclusion logic
-- Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions</PackageReleaseNotes>
+- Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions
+- Allow w (weeks) in Jira-type date expressions</PackageReleaseNotes>
     <Version>1.0.27</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -41,7 +42,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lurgle.Dates" Version="1.0.7" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.8" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 
