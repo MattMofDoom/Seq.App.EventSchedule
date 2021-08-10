@@ -31,7 +31,7 @@
 - Improve appname inclusion logic
 - Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions
 - Allow w (weeks) in Jira-type date expressions</PackageReleaseNotes>
-    <Version>1.0.27</Version>
+    <Version>1.0.28</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
