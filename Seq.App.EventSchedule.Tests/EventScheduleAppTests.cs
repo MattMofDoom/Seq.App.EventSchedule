@@ -39,9 +39,9 @@ namespace Seq.App.EventSchedule.Tests
             showTime = app.GetShowtime();
             _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
                                         showTime.End.ToString("F"));
-            _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.EventLogged,
-                string.Join(",", app.IncludeDays));
-            Assert.True(app.EventLogged);
+            _testOutputHelper.WriteLine("Event Logged: {0}, Include Day: {1}", app.Counters.EventLogged,
+                string.Join(",", app.Config.IncludeDays));
+            Assert.True(app.Counters.EventLogged);
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Seq.App.EventSchedule.Tests
             Assert.False(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             _testOutputHelper.WriteLine("New ShowTime: " + showTime.Start.ToString("F") + " to " +
                                         showTime.End.ToString("F"));
-            Assert.False(app.EventLogged);
+            Assert.False(app.Counters.EventLogged);
         }
 
         [Fact]
@@ -83,8 +83,8 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
             //Wait for showtime
             Thread.Sleep(2000);
-            _testOutputHelper.WriteLine("Event Logged: {0}", app.EventLogged);
-            Assert.True(app.EventLogged);
+            _testOutputHelper.WriteLine("Event Logged: {0}", app.Counters.EventLogged);
+            Assert.True(app.Counters.EventLogged);
         }
 
         [Fact]
@@ -104,13 +104,13 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(showTime.End.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
             //Wait for showtime
             Thread.Sleep(2000);
-            _testOutputHelper.WriteLine("Log count: {0}", app.LogCount);
-            Assert.True(app.LogCount >= 1);
+            _testOutputHelper.WriteLine("Log count: {0}", app.Counters.LogCount);
+            Assert.True(app.Counters.LogCount >= 1);
             for (var i = 1; i < 6; i++)
             {
                 Thread.Sleep(2000);
-                _testOutputHelper.WriteLine("Log count after {0} seconds: {1}", i * 2, app.LogCount);
-                Assert.True(app.LogCount >= i + 1 && app.LogCount <= i + 5);
+                _testOutputHelper.WriteLine("Log count after {0} seconds: {1}", i * 2, app.Counters.LogCount);
+                Assert.True(app.Counters.LogCount >= i + 1 && app.Counters.LogCount <= i + 5);
             }
         }
 
@@ -172,15 +172,15 @@ namespace Seq.App.EventSchedule.Tests
                 CultureInfo.InvariantCulture, DateTimeStyles.None);
 
             var app = Some.Reactor(start.ToString("H:mm:ss"), 0);
-            app.TestOverrideTime = start;
-            app.UseTestOverrideTime = true;
+            app.Config.TestOverrideTime = start;
+            app.Config.UseTestOverrideTime = true;
             app.Attach(TestAppHost.Instance);
 
             for (var i = 0; i < 169; i++)
             {
                 if (i > 0)
                 {
-                    app.TestOverrideTime = app.TestOverrideTime.AddHours(1);
+                    app.Config.TestOverrideTime = app.Config.TestOverrideTime.AddHours(1);
 
                     if (i % 24 == 0) start = start.AddDays(1);
                 }
@@ -189,12 +189,12 @@ namespace Seq.App.EventSchedule.Tests
                     "Australia - New South Wales",
                     "Local holiday", start.ToString("MM/dd/yyyy"), start.Year.ToString(),
                     start.Month.ToString(), start.Day.ToString(), start.DayOfWeek.ToString());
-                app.Holidays = new List<AbstractApiHolidays> {holiday};
+                app.Config.Holidays = new List<AbstractApiHolidays> {holiday};
 
-                app.UtcRollover(app.TestOverrideTime.ToUniversalTime(), true);
+                app.UtcRollover(app.Config.TestOverrideTime.ToUniversalTime(), true);
                 var showTime = app.GetShowtime();
                 _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                    app.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                    app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
                     showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
 
                 Assert.True(showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
@@ -209,28 +209,28 @@ namespace Seq.App.EventSchedule.Tests
                 CultureInfo.InvariantCulture, DateTimeStyles.None);
 
             var app = Some.Reactor(start.ToString("H:mm:ss"), 0);
-            app.TestOverrideTime = start;
-            app.UseTestOverrideTime = true;
+            app.Config.TestOverrideTime = start;
+            app.Config.UseTestOverrideTime = true;
             app.Attach(TestAppHost.Instance);
 
             for (var i = 0; i < 169; i++)
             {
                 if (i > 0)
                 {
-                    app.TestOverrideTime = app.TestOverrideTime.AddHours(1);
+                    app.Config.TestOverrideTime = app.Config.TestOverrideTime.AddHours(1);
 
                     if (i % 24 == 0) start = start.AddDays(1);
                 }
 
-                app.Holidays = new List<AbstractApiHolidays>();
+                app.Config.Holidays = new List<AbstractApiHolidays>();
 
-                app.UtcRollover(app.TestOverrideTime.ToUniversalTime());
+                app.UtcRollover(app.Config.TestOverrideTime.ToUniversalTime());
                 var showTime = app.GetShowtime();
 
-                if (start < app.TestOverrideTime)
+                if (start < app.Config.TestOverrideTime)
                 {
                     _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                        app.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                        app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
                         showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
                     Assert.True(showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
                     Assert.True(showTime.End.ToString("F") ==
@@ -239,7 +239,7 @@ namespace Seq.App.EventSchedule.Tests
                 else
                 {
                     _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                        app.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                        app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
                         showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
                     Assert.True(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
                     Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
@@ -257,6 +257,21 @@ namespace Seq.App.EventSchedule.Tests
             Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> {holiday},
                 new List<string> {"National", "Local"}, new List<string> {"Australia", "New South Wales"}, false,
                 true).Count > 0);
+        }
+
+        [Fact]
+        public void RenderTemplate()
+        {
+            var app = Some.Reactor(DateTime.Now.AddSeconds(1).ToString("H:mm:ss"),
+                 0);
+            app.UseHandlebars = true;
+            app.AlertMessage =
+                "{{AppName}}  {{TimeNow}} - {{Timeout}} Seconds - {{TimeoutMins}} Mins - {{TimeoutHours}} Hours - {dd-MM-yyyy+10m}";
+            app.Attach(TestAppHost.Instance);
+            var output = DateTokens.HandleTokens(app.MessageTemplate.Render(app.Config, app.Counters));
+            _testOutputHelper.WriteLine("Template: {0}\nOutput: {1}", app.Message, output);
+
+            Assert.DoesNotContain("{", output);
         }
     }
 }
