@@ -15,12 +15,12 @@ namespace Seq.App.EventSchedule.Classes
         public string ApiKey;
         public bool BypassLocal;
         public string Country;
-        public List<DayOfWeek> DaysOfWeek;
-        public List<MonthOfYear> MonthsOfYear;
+        public List<DayOfWeek> DaysOfWeek = new List<DayOfWeek>();
+        public List<MonthOfYear> MonthsOfYear = new List<MonthOfYear>();
         public bool Diagnostics;
         public string DueDate;
 
-        public List<string> HolidayMatch;
+        public List<string> HolidayMatch = new List<string>();
         public bool IncludeApp;
         public bool IncludeBank;
         public bool IncludeDescription;
@@ -29,8 +29,8 @@ namespace Seq.App.EventSchedule.Classes
 
         public bool IsTags;
         
-        public string[] LocalAddresses;
-        public List<string> LocaleMatch;
+        public string[] LocalAddresses = Array.Empty<string>();
+        public List<string> LocaleMatch = new List<string>();
 
         public string Priority;
         public string ProjectKey;
@@ -45,7 +45,7 @@ namespace Seq.App.EventSchedule.Classes
         public TimeSpan ScheduleInterval;
         public string StartFormat = "H:mm:ss";
 
-        public string[] Tags;
+        public string[] Tags = Array.Empty<string>();
         public string TestDate;
         public LogEventLevel ThresholdLogLevel;
         
@@ -53,7 +53,7 @@ namespace Seq.App.EventSchedule.Classes
         public bool UseProxy;
         
         public List<DateTime> ExcludeDays;
-        public List<AbstractApiHolidays> Holidays;
+        public List<AbstractApiHolidays> Holidays = new List<AbstractApiHolidays>();
         public List<DateTime> IncludeDays;
         public DateTime TestOverrideTime = DateTime.Now;
         public bool UseTestOverrideTime; 
