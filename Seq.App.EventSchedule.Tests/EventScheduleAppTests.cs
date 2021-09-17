@@ -266,7 +266,7 @@ namespace Seq.App.EventSchedule.Tests
                  0);
             app.UseHandlebars = true;
             app.AlertMessage =
-                "{{AppName}}  {{TimeNow}} - {{Timeout}} Seconds - {{TimeoutMins}} Mins - {{TimeoutHours}} Hours - {dd-MM-yyyy+10m}";
+                "{{AppName}}  {{TimeNow}} - {dd-MM-yyyy+10m}";
             app.Attach(TestAppHost.Instance);
             var output = DateTokens.HandleTokens(app.MessageTemplate.Render(app.Config, app.Counters));
             _testOutputHelper.WriteLine("Template: {0}\nOutput: {1}", app.Message, output);

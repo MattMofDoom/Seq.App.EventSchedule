@@ -7,9 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Timers;
-using HandlebarsDotNet;
 using Lurgle.Dates.Enums;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -605,7 +603,7 @@ namespace Seq.App.EventSchedule
                 {
                     if (Config.Diagnostics) LogEvent(LogEventLevel.Debug, "Validate Country {Country}", Country);
 
-                    if (Lurgle.Dates.Holidays.ValidateCountry(Country))
+                    if (Holidays.ValidateCountry(Country))
                     {
                         Config.UseHolidays = true;
                         Counters.RetryCount = 10;
@@ -702,7 +700,7 @@ namespace Seq.App.EventSchedule
                 {
                     Counters.LastUpdate = DateTime.Now;
                     var result = WebClient.GetHolidays(Config.ApiKey, Config.Country, localDate).Result;
-                    Config.Holidays = Lurgle.Dates.Holidays.ValidateHolidays(result, Config.HolidayMatch, Config.LocaleMatch, Config.IncludeBank,
+                    Config.Holidays = Holidays.ValidateHolidays(result, Config.HolidayMatch, Config.LocaleMatch, Config.IncludeBank,
                         Config.IncludeWeekends);
                     Counters.LastDay = localDate;
                     Counters.ErrorCount = 0;

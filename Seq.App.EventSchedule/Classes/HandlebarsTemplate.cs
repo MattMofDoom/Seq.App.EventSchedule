@@ -33,7 +33,6 @@ namespace Seq.App.EventSchedule.Classes
                 { "DateNowShort", DateTime.Now.ToShortDateString() },
                 { "DateTimeNow", DateTime.Now.ToString("F") },
                 { "StartTime", counters.StartTime.ToString("F") },
-                { "EndTime", counters.StartTime.ToString("F") },
                 { "RepeatSchedule", config.ScheduleInterval.TotalSeconds },
                 { "RepeatScheduleMins", config.ScheduleInterval.TotalMinutes.ToString("N2") },
                 { "RepeatSuppressTimeHours", config.ScheduleInterval.TotalHours.ToString("N2") },
