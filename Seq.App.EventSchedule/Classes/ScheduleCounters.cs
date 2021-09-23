@@ -4,18 +4,18 @@ namespace Seq.App.EventSchedule.Classes
 {
     public class ScheduleCounters
     {
+        public DateTime EndTime;
+        public int ErrorCount;
+        public bool EventLogged;
+        public bool IsShowtime;
+        public bool IsUpdating;
         public DateTime LastDay;
         public DateTime LastError;
         public DateTime LastLog;
         public DateTime LastUpdate;
-        public DateTime EndTime;
-        public DateTime StartTime;
-        public int ErrorCount;
-        public bool IsUpdating;
-        public bool SkippedShowtime;
-        public bool EventLogged;
-        public bool IsShowtime;
         public int LogCount;
         public int RetryCount;
+        public bool SkippedShowtime;
+        public DateTime StartTime;
     }
 }
