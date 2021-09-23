@@ -16,25 +16,27 @@
     <PackageTags>seq-app seq event schedule log holidays</PackageTags>
     <PackageIcon>schedule.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes>- Add option to include description in log message, instead of automatically including it
-- Add tokens to message, description, and tags for including date components in message and description
-- Always include Message and Description properties for the scheduled log events
-- Date tokens can include addition and subtraction (eg. {d+1} {M-10})
-- Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
-- Multiple date expression tokens are permitted
-- Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
-- Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
-- Allow Responders to be mapped to the {LogToken} key
-- Allow defining custom tokens for Message, Description, and Tags
-- Switch to using Lurgle.Dates as common date expression library
-- Remove custom tokens
-- Improve appname inclusion logic
-- Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions
-- Allow w (weeks) in Jira-type date expressions
-- Add month configuration
-- Add Handlebars template functionality
-</PackageReleaseNotes>
-    <Version>1.0.30</Version>
+    <PackageReleaseNotes>
+      - Add option to include description in log message, instead of automatically including it
+      - Add tokens to message, description, and tags for including date components in message and description
+      - Always include Message and Description properties for the scheduled log events
+      - Date tokens can include addition and subtraction (eg. {d+1} {M-10})
+      - Add more complex date expression tokens (eg. {dd MMM yyyy+10d} {d M yy+10m} {dd MMMM yyyy-10y}
+      - Multiple date expression tokens are permitted
+      - Allow Project Key, Initial Time Estimate, Remaining Time Estimate, and Due Date properties for use with other Seq apps
+      - Allow logging multiple log entries with variable outputs using the {LogToken} and {LogTokenLong} token that can be used in Message, Description, and Tags.
+      - Allow Responders to be mapped to the {LogToken} key
+      - Allow defining custom tokens for Message, Description, and Tags
+      - Switch to using Lurgle.Dates as common date expression library
+      - Remove custom tokens
+      - Improve appname inclusion logic
+      - Allow description to be a multi-line input type (LongText) to allow more clarity for long descriptions
+      - Allow w (weeks) in Jira-type date expressions
+      - Add month configuration
+      - Add Handlebars template functionality
+      - Eliminate lingering references to Thresholds in logs
+    </PackageReleaseNotes>
+    <Version>1.0.31</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -55,7 +57,10 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="$(OutDir)/**/Flurl.Http.dll;$(OutDir)/**/Flurl.dll;$(OutDir)/**/Lurgle.Dates.dll;$(OutDir)/**/Handlebars.dll;" Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+    <None
+      Include="$(OutDir)/**/Flurl.Http.dll;$(OutDir)/**/Flurl.dll;$(OutDir)/**/Lurgle.Dates.dll;$(OutDir)/**/Handlebars.dll;"
+      Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true"
+      PackagePath="lib/$(TargetFramework)" />
     <None Include="schedule.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

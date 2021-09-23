@@ -1,14 +1,14 @@
-﻿using Lurgle.Dates;
-using Lurgle.Dates.Classes;
-using Seq.App.EventSchedule.Classes;
-using Seq.Apps;
-using Seq.Apps.LogEvents;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Timers;
+using Lurgle.Dates;
+using Lurgle.Dates.Classes;
 using Lurgle.Dates.Enums;
+using Seq.App.EventSchedule.Classes;
+using Seq.Apps;
+using Seq.Apps.LogEvents;
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -26,9 +26,7 @@ namespace Seq.App.EventSchedule
         public string Description;
         public HandlebarsTemplate DescriptionTemplate;
         public string Message;
-        public HandlebarsTemplate MessageTemplate;
-
-// ReSharper disable MemberCanBePrivate.Global
+        public HandlebarsTemplate MessageTemplate; // ReSharper disable MemberCanBePrivate.Global
 
         // ReSharper disable UnusedAutoPropertyAccessor.Global
         // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -60,7 +58,7 @@ namespace Seq.App.EventSchedule
 
         [SeqAppSetting(DisplayName = "Multi-log Token",
             HelpText =
-                "Optional comma-delimited list of values (Value, or Value=Long Value) that can be referenced as {LogToken} and {LogTokenLong} in Message, Description, and Tags. If specified, this will create log entries for each value.",
+                "Optional comma-delimited list of key value pairs (Value=Long Value) that can be referenced as {LogToken} and {LogTokenLong} in Message, Description, and Tags. If specified, this will create log entries for each value. Note that a limitation of this implementation means that the key and value CANNOT contain commas or equal signs",
             IsOptional = true, InputType = SettingInputType.LongText)]
         public string MultiLogToken { get; set; }
 
@@ -76,7 +74,7 @@ namespace Seq.App.EventSchedule
 
         [SeqAppSetting(DisplayName = "Responders for scheduled logs",
             HelpText =
-                "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder.",
+                "Optional Responders property to pass for scheduled logs, for use with other apps. This can be specified as a comma-delimited key pair to match responders to multi-log tokens, in the format LogToken=Responder. Make sure the Responder value is valid for the target application!",
             IsOptional = true,
             InputType = SettingInputType.LongText)]
         public string Responders { get; set; }
@@ -87,17 +85,20 @@ namespace Seq.App.EventSchedule
         public string ProjectKey { get; set; }
 
         [SeqAppSetting(DisplayName = "Initial Time Estimate for scheduled logs",
-            HelpText = "Optional Initial Time Estimate property to pass for scheduled logs, for use with other apps. Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
+            HelpText =
+                "Optional Initial Time Estimate property to pass for scheduled logs, for use with other apps. Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
             IsOptional = true)]
         public string InitialTimeEstimate { get; set; }
 
         [SeqAppSetting(DisplayName = "Remaining Time Estimate for scheduled logs",
-            HelpText = "Optional Remaining Time Estimate property to pass for scheduled logs, for use with other apps. Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
+            HelpText =
+                "Optional Remaining Time Estimate property to pass for scheduled logs, for use with other apps. Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
             IsOptional = true)]
         public string RemainingTimeEstimate { get; set; }
 
         [SeqAppSetting(DisplayName = "Due Date for scheduled logs",
-            HelpText = "Optional Due Date property to pass for scheduled logs, for use with other apps. Date in yyyy-MM-dd format, or Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
+            HelpText =
+                "Optional Due Date property to pass for scheduled logs, for use with other apps. Date in yyyy-MM-dd format, or Jira-type date expression, eg. Ww (weeks) Xd (days) Yh (hours) Zm (minutes).",
             IsOptional = true)]
         public string DueDate { get; set; }
 
@@ -309,7 +310,7 @@ namespace Seq.App.EventSchedule
                 if (Config.Diagnostics)
                     LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...");
                 var tokens = (MultiLogToken ?? "")
-                    .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Trim())
                     .ToList();
                 foreach (var x in from token in tokens where token.Contains("=") select token.Split('='))
@@ -334,31 +335,39 @@ namespace Seq.App.EventSchedule
 
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "UTC Days of Week {DaysOfWeek} will be used ...", Config.DaysOfWeek.ToArray());
+                LogEvent(LogEventLevel.Debug, "UTC Days of Week {DaysOfWeek} will be used ...",
+                    Config.DaysOfWeek.ToArray());
 
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug, "Parse Months of Year {MonthsOfYear} ...", MonthsOfYear);
             Config.MonthsOfYear = Dates.GetMonthsOfYear(MonthsOfYear);
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "Months of Year {MonthsOfYear} will be used ...", Config.MonthsOfYear.ToArray());
+                LogEvent(LogEventLevel.Debug, "Months of Year {MonthsOfYear} will be used ...",
+                    Config.MonthsOfYear.ToArray());
 
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "Validate Include Days of Month {Config.IncludeDays} ...", IncludeDaysOfMonth);
+                LogEvent(LogEventLevel.Debug, "Validate Include Days of Month {Config.IncludeDays} ...",
+                    IncludeDaysOfMonth);
 
-            Config.IncludeDays = Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
+            Config.IncludeDays =
+                Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {Config.IncludeDays} ...", Config.IncludeDays.ToArray());
+                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {Config.IncludeDays} ...",
+                    Config.IncludeDays.ToArray());
             else
                 LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: ALL ...");
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "Validate Exclude Days of Month {Config.ExcludeDays} ...", ExcludeDaysOfMonth);
+                LogEvent(LogEventLevel.Debug, "Validate Exclude Days of Month {Config.ExcludeDays} ...",
+                    ExcludeDaysOfMonth);
 
-            Config.ExcludeDays = Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
+            Config.ExcludeDays =
+                Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.ExcludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {Config.ExcludeDays} ...", Config.ExcludeDays.ToArray());
+                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {Config.ExcludeDays} ...",
+                    Config.ExcludeDays.ToArray());
             else
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: NONE ...");
 
@@ -393,7 +402,7 @@ namespace Seq.App.EventSchedule
                     Description);
 
             if (IncludeDescription != null)
-                Config.IncludeDescription = (bool) IncludeDescription;
+                Config.IncludeDescription = (bool)IncludeDescription;
 
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug, "Include Description in Log Message: '{IncludeDescription}' ...",
@@ -402,14 +411,14 @@ namespace Seq.App.EventSchedule
             if (Config.Diagnostics) LogEvent(LogEventLevel.Debug, "Convert Tags '{Tags}' to array ...", Tags);
 
             Config.Tags = (Tags ?? "")
-                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
                 .ToArray();
             if (Config.Tags.Length > 0) Config.IsTags = true;
 
             if (string.IsNullOrWhiteSpace(ScheduleLogLevel)) ScheduleLogLevel = "Information";
-            if (!Enum.TryParse(ScheduleLogLevel, out Config.ThresholdLogLevel))
-                Config.ThresholdLogLevel = LogEventLevel.Information;
+            if (!Enum.TryParse(ScheduleLogLevel, out Config.ScheduleLogLevel))
+                Config.ScheduleLogLevel = LogEventLevel.Information;
 
             if (!string.IsNullOrEmpty(Priority))
                 Config.Priority = Priority;
@@ -420,7 +429,7 @@ namespace Seq.App.EventSchedule
                 {
                     LogEvent(LogEventLevel.Debug, "Convert Responders to dictionary ...");
                     var responderList = (Responders ?? "")
-                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(t => t.Trim())
                         .ToList();
                     foreach (var x in from responder in responderList
@@ -474,8 +483,8 @@ namespace Seq.App.EventSchedule
 
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug,
-                    "Log level {LogLevel} will be used for threshold violations on {Instance} ...",
-                    Config.ThresholdLogLevel, App.Title);
+                    "Log level {LogLevel} will be used for scheduled logs on {Instance} ...",
+                    Config.ScheduleLogLevel, App.Title);
 
             if (Config.Diagnostics) LogEvent(LogEventLevel.Debug, "Starting timer ...");
 
@@ -500,20 +509,23 @@ namespace Seq.App.EventSchedule
             if (Counters.LastDay < localDate) RetrieveHolidays(localDate, timeNow);
 
             //We can only enter showtime if we're not currently retrying holidays, but existing showtimes will continue to monitor
-            if ((!Config.UseHolidays || Counters.IsShowtime || !Counters.IsShowtime && !Counters.IsUpdating) && timeNow >= Counters.StartTime &&
+            if ((!Config.UseHolidays || Counters.IsShowtime || !Counters.IsShowtime && !Counters.IsUpdating) &&
+                timeNow >= Counters.StartTime &&
                 timeNow < Counters.EndTime)
             {
                 if (!Counters.IsShowtime && (!Config.DaysOfWeek.Contains(Counters.StartTime.DayOfWeek) ||
-                                    Config.IncludeDays.Count > 0 && !Config.IncludeDays.Contains(Counters.StartTime) ||
-                                    Config.ExcludeDays.Contains(Counters.StartTime) || !Config.MonthsOfYear.Contains((MonthOfYear)localDate.Month)))
+                                             Config.IncludeDays.Count > 0 &&
+                                             !Config.IncludeDays.Contains(Counters.StartTime) ||
+                                             Config.ExcludeDays.Contains(Counters.StartTime) ||
+                                             !Config.MonthsOfYear.Contains((MonthOfYear)localDate.Month)))
                 {
                     //Log that we have skipped a day due to an exclusion
                     if (!Counters.SkippedShowtime)
                         LogEvent(LogEventLevel.Debug,
-                            "Threshold checking will not be performed due to exclusions - Day of Week Excluded {DayOfWeek}, Day Of Month Not Included {IncludeDay}, Day of Month Excluded {ExcludeDay}, Month Excluded {MonthOfYear} ...",
+                            "Scheduled logs will not be executed due to exclusions - Day of Week Excluded {DayOfWeek}, Day Of Month Not Included {IncludeDay}, Day of Month Excluded {ExcludeDay}, Month Excluded {MonthOfYear} ...",
                             !Config.DaysOfWeek.Contains(Counters.StartTime.DayOfWeek),
                             Config.IncludeDays.Count > 0 && !Config.IncludeDays.Contains(Counters.StartTime),
-                            Config.ExcludeDays.Count > 0 && Config.ExcludeDays.Contains(Counters.StartTime), 
+                            Config.ExcludeDays.Count > 0 && Config.ExcludeDays.Contains(Counters.StartTime),
                             !Config.MonthsOfYear.Contains((MonthOfYear)localDate.Month));
 
                     Counters.SkippedShowtime = true;
@@ -532,27 +544,23 @@ namespace Seq.App.EventSchedule
                     }
 
                     var difference = timeNow - Counters.LastLog;
-                    //Check the interval time versus threshold count
-                    if (!Counters.EventLogged || Config.RepeatSchedule && difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds)
+                    //Check if we can log the event, whether a single instance or repeating schedule
+                    if (!Counters.EventLogged || Config.RepeatSchedule &&
+                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds)
                     {
                         if (Config.LogTokenLookup.Any())
-                        {
                             //Log multiple events
                             foreach (var token in Config.LogTokenLookup)
-                            {
                                 //Log event
-                                ScheduledLogEvent(Config.ThresholdLogLevel,
+                                ScheduledLogEvent(Config.ScheduleLogLevel,
                                     Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
-                                    Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description, token);
-                            }
-                        }
+                                    Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description,
+                                    token);
                         else
-                        {
                             //Log event
-                            ScheduledLogEvent(Config.ThresholdLogLevel,
+                            ScheduledLogEvent(Config.ScheduleLogLevel,
                                 Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
                                 Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description);
-                        }
 
                         Counters.LastLog = timeNow;
                         Counters.EventLogged = true;
@@ -580,12 +588,14 @@ namespace Seq.App.EventSchedule
                 !string.IsNullOrEmpty(Config.TestDate)) return;
             UtcRollover(timeNow);
             //Take the opportunity to refresh include/exclude days to allow for month rollover
-            Config.IncludeDays = Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
+            Config.IncludeDays =
+                Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
                 LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {Config.IncludeDays} ...",
                     Config.IncludeDays.ToArray());
 
-            Config.ExcludeDays = Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
+            Config.ExcludeDays =
+                Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.ExcludeDays.Count > 0)
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {Config.ExcludeDays} ...",
                     Config.ExcludeDays.ToArray());
@@ -617,13 +627,14 @@ namespace Seq.App.EventSchedule
                         if (string.IsNullOrEmpty(HolidayMatch))
                             Config.HolidayMatch = new List<string>();
                         else
-                            Config.HolidayMatch = HolidayMatch.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                            Config.HolidayMatch = HolidayMatch
+                                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToList();
 
                         if (string.IsNullOrEmpty(LocaleMatch))
                             Config.LocaleMatch = new List<string>();
                         else
-                            Config.LocaleMatch = LocaleMatch.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                            Config.LocaleMatch = LocaleMatch.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToList();
 
                         if (!string.IsNullOrEmpty(Proxy))
@@ -631,7 +642,8 @@ namespace Seq.App.EventSchedule
                             Config.UseProxy = true;
                             Config.Proxy = Proxy;
                             Config.BypassLocal = BypassLocal;
-                            Config.LocalAddresses = LocalAddresses.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                            Config.LocalAddresses = LocalAddresses
+                                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToArray();
                             Config.ProxyUser = ProxyUser;
                             Config.ProxyPass = ProxyPass;
@@ -644,7 +656,8 @@ namespace Seq.App.EventSchedule
                                 Config.UseProxy, Config.Proxy, Config.BypassLocal,
                                 !string.IsNullOrEmpty(ProxyUser) && !string.IsNullOrEmpty(ProxyPass));
 
-                        WebClient.SetConfig(App.Title, Config.UseProxy, Config.Proxy, Config.ProxyUser, Config.ProxyPass, Config.BypassLocal,
+                        WebClient.SetConfig(App.Title, Config.UseProxy, Config.Proxy, Config.ProxyUser,
+                            Config.ProxyPass, Config.BypassLocal,
                             Config.LocalAddresses);
                     }
                     else
@@ -679,7 +692,8 @@ namespace Seq.App.EventSchedule
         /// <param name="utcDate"></param>
         private void RetrieveHolidays(DateTime localDate, DateTime utcDate)
         {
-            if (Config.UseHolidays && (!Counters.IsUpdating || Counters.IsUpdating && (DateTime.Now - Counters.LastUpdate).TotalSeconds > 10 &&
+            if (Config.UseHolidays && (!Counters.IsUpdating || Counters.IsUpdating &&
+                (DateTime.Now - Counters.LastUpdate).TotalSeconds > 10 &&
                 (DateTime.Now - Counters.LastError).TotalSeconds > 10 && Counters.ErrorCount < Counters.RetryCount))
             {
                 Counters.IsUpdating = true;
@@ -700,7 +714,8 @@ namespace Seq.App.EventSchedule
                 {
                     Counters.LastUpdate = DateTime.Now;
                     var result = WebClient.GetHolidays(Config.ApiKey, Config.Country, localDate).Result;
-                    Config.Holidays = Holidays.ValidateHolidays(result, Config.HolidayMatch, Config.LocaleMatch, Config.IncludeBank,
+                    Config.Holidays = Holidays.ValidateHolidays(result, Config.HolidayMatch, Config.LocaleMatch,
+                        Config.IncludeBank,
                         Config.IncludeWeekends);
                     Counters.LastDay = localDate;
                     Counters.ErrorCount = 0;
@@ -761,11 +776,13 @@ namespace Seq.App.EventSchedule
 
             //Day rollover, we need to ensure the next start and end is in the future
             if (!string.IsNullOrEmpty(Config.TestDate))
-                Counters.StartTime = DateTime.ParseExact(Config.TestDate + " " + ScheduleTime, "yyyy-M-d " + Config.StartFormat,
+                Counters.StartTime = DateTime.ParseExact(Config.TestDate + " " + ScheduleTime,
+                    "yyyy-M-d " + Config.StartFormat,
                     CultureInfo.InvariantCulture, DateTimeStyles.None).ToUniversalTime();
             else if (Config.UseTestOverrideTime)
                 Counters.StartTime = DateTime
-                    .ParseExact(Config.TestOverrideTime.ToString("yyyy-M-d") + " " + ScheduleTime, "yyyy-M-d " + Config.StartFormat,
+                    .ParseExact(Config.TestOverrideTime.ToString("yyyy-M-d") + " " + ScheduleTime,
+                        "yyyy-M-d " + Config.StartFormat,
                         CultureInfo.InvariantCulture, DateTimeStyles.None)
                     .ToUniversalTime();
             else
@@ -777,7 +794,8 @@ namespace Seq.App.EventSchedule
             Counters.EndTime = Config.RepeatSchedule ? Counters.StartTime.AddDays(1) : Counters.StartTime.AddHours(1);
 
             //If there are holidays, account for them
-            if (Config.Holidays.Any(holiday => Counters.StartTime >= holiday.UtcStart && Counters.StartTime < holiday.UtcEnd))
+            if (Config.Holidays.Any(holiday =>
+                Counters.StartTime >= holiday.UtcStart && Counters.StartTime < holiday.UtcEnd))
             {
                 Counters.StartTime = Counters.StartTime.AddDays(Config.Holidays.Any(holiday =>
                     Counters.StartTime.AddDays(1) >= holiday.UtcStart && Counters.StartTime.AddDays(1) < holiday.UtcEnd)
@@ -788,7 +806,8 @@ namespace Seq.App.EventSchedule
 
             //If we updated holidays or this is a repeating schedule, don't automatically put start time to the future
             if (!RepeatSchedule && (!Config.UseTestOverrideTime && Counters.StartTime < utcDate ||
-                                    Config.UseTestOverrideTime && Counters.StartTime < Config.TestOverrideTime.ToUniversalTime()) &&
+                                    Config.UseTestOverrideTime &&
+                                    Counters.StartTime < Config.TestOverrideTime.ToUniversalTime()) &&
                 !isUpdateHolidays) Counters.StartTime = Counters.StartTime.AddDays(1);
 
             if (Counters.EndTime < Counters.StartTime)
@@ -798,7 +817,8 @@ namespace Seq.App.EventSchedule
                 isUpdateHolidays
                     ? "UTC Day Rollover (Holidays Updated), Parse {LocalStart} To Next UTC Schedule Time {ScheduleTime} ({StartDayOfWeek}), UTC End Time {EndTime} ({EndDayOfWeek})..."
                     : "UTC Day Rollover, Parse {LocalStart} To Next UTC Start Time {ScheduleTime} ({StartDayOfWeek}), UTC End Time {EndTime} ({EndDayOfWeek})...",
-                ScheduleTime, Counters.StartTime.ToShortTimeString(), Counters.StartTime.DayOfWeek, Counters.EndTime.ToShortTimeString(),
+                ScheduleTime, Counters.StartTime.ToShortTimeString(), Counters.StartTime.DayOfWeek,
+                Counters.EndTime.ToShortTimeString(),
                 Counters.EndTime.DayOfWeek);
         }
 
@@ -866,10 +886,7 @@ namespace Seq.App.EventSchedule
         {
             var logArgsList = args.ToList();
 
-            if (Config.IncludeApp)
-            {
-                logArgsList.Insert(0, App.Title);
-            }
+            if (Config.IncludeApp) logArgsList.Insert(0, App.Title);
 
             var logArgs = logArgsList.ToArray();
 
@@ -880,16 +897,20 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), Config.InitialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
-                    .ForContext(nameof(Counters.LogCount), Counters.LogCount).ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
+                    .ForContext(nameof(Counters.LogCount), Counters.LogCount)
+                    .ForContext("MultiLogTokens", Config.LogTokenLookup)
+                    .Write((Serilog.Events.LogEventLevel)logLevel,
+                        Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), Config.Priority)
-                    .ForContext(nameof(Responders), Config.Responders).ForContext(nameof(Counters.LogCount), Counters.LogCount)
+                    .ForContext(nameof(Responders), Config.Responders)
+                    .ForContext(nameof(Counters.LogCount), Counters.LogCount)
                     .ForContext(nameof(InitialTimeEstimate), Config.InitialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel)logLevel,
+                        Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
         }
 
         /// <summary>
@@ -903,10 +924,7 @@ namespace Seq.App.EventSchedule
         {
             var logArgsList = args.ToList();
 
-            if (Config.IncludeApp)
-            {
-                logArgsList.Insert(0, App.Title);
-            }
+            if (Config.IncludeApp) logArgsList.Insert(0, App.Title);
 
             var logArgs = logArgsList.ToArray();
 
@@ -917,16 +935,20 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(InitialTimeEstimate), Config.InitialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
-                    .ForContext(nameof(Counters.LogCount), Counters.LogCount).ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
+                    .ForContext(nameof(Counters.LogCount), Counters.LogCount)
+                    .ForContext("MultiLogTokens", Config.LogTokenLookup)
+                    .Write((Serilog.Events.LogEventLevel)logLevel, exception,
+                        Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), Config.Priority)
-                    .ForContext(nameof(Responders), Config.Responders).ForContext(nameof(Counters.LogCount), Counters.LogCount)
+                    .ForContext(nameof(Responders), Config.Responders)
+                    .ForContext(nameof(Counters.LogCount), Counters.LogCount)
                     .ForContext(nameof(InitialTimeEstimate), Config.InitialTimeEstimate)
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel) logLevel, exception, Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
+                    .Write((Serilog.Events.LogEventLevel)logLevel, exception,
+                        Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
         }
     }
 }
