@@ -14,6 +14,7 @@ namespace Seq.App.EventSchedule.Classes
         public DateTime LastLog;
         public DateTime LastUpdate;
         public int LogCount;
+        public bool LoggingEvents;
         public int RetryCount;
         public bool SkippedShowtime;
         public DateTime StartTime;

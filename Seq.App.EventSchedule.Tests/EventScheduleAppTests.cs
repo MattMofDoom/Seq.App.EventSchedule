@@ -88,6 +88,37 @@ namespace Seq.App.EventSchedule.Tests
         }
 
         [Fact]
+        public void MultiLog()
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                var start = DateTime.Now.AddSeconds(1);
+                var app = Some.Reactor(start.ToString("H:mm:ss"),
+                    0);
+                app.MultiLogToken =
+                    "ITKC1=Code Reviews,ITKC2=IT Release Management,ITKC4=Approval of IT change requirements,ITKC7=Adequate protection against malware - external attacks and intrusion attempts,ITKC13=IT Testing,ITKC14=User Acceptance Testing,ITKC21=IT incident management,ITKC22=Scheduled process monitoring and resolution,ITKC23=IT Problem management,ITKC24=IT change logging and acceptance,ITKC25=IT change approval,ITKC26=IT change verification and back-out planning,ITKC27=Emergency change requests,ITKC29=Back-up execution and storage,ITKC30=IT Capacity Management,ITKC38=IT Security Logging - Monitoring and Alerting,ITKC39=Security Patch Management,ITKC40=Security testing,ITKC41=IT access approval - On-boarding,ITKC42=IT authentication,ITKC43=IT access maintenance,ITKC44=Accountability for system/ privileged accounts";
+                app.Responders =
+                    "ITKC1=Test1,ITKC2=Test2,ITKC4=Test3,ITKC7=Test3,ITKC13=Test4,ITKC14=Test5,ITKC21=Test2,ITKC22=Test6,ITKC23=Test2,ITKC24=Test6,ITKC25=Test6,ITKC26=Test7,ITKC27=Test7,ITKC29=Test8,ITKC30=Test9,ITKC38=Test3,ITKC39=Test9,ITKC40=Test3,ITKC41=Test10,ITKC42=Test11,ITKC43=Test11,ITKC44=Test11";
+                app.Attach(TestAppHost.Instance);
+                var showTime = app.GetShowtime();
+                _testOutputHelper.WriteLine("Current UTC: " + DateTime.Now.ToUniversalTime().ToString("F"));
+                _testOutputHelper.WriteLine("ShowTime: " + showTime.Start.ToString("F") + " to " +
+                                            showTime.End.ToString("F"));
+                _testOutputHelper.WriteLine("Expect Start: " + start.ToUniversalTime().ToString("F") + " to " +
+                                            start.AddHours(1).ToUniversalTime().ToString("F"));
+                Assert.True(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
+                Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
+                //Wait for showtime
+                Thread.Sleep(2000);
+                _testOutputHelper.WriteLine("Event Logged: {0}", app.Counters.EventLogged);
+                _testOutputHelper.WriteLine("Events: {0}, Configured: {1}", app.Counters.LogCount,
+                    app.Config.LogTokenLookup.Count);
+                Assert.True(app.Counters.EventLogged);
+                Assert.True(app.Counters.LogCount == 22);
+            }
+        }
+
+        [Fact]
         public void AppRepeatSchedule()
         {
             var start = DateTime.Now.AddSeconds(1);
@@ -185,16 +216,19 @@ namespace Seq.App.EventSchedule.Tests
                     if (i % 24 == 0) start = start.AddDays(1);
                 }
 
-                var holiday = new AbstractApiHolidays("Threshold Day", "", "AU", "", "AU",
+                var holiday = new AbstractApiHolidays("Schedule Day", "", "AU", "", "AU",
                     "Australia - New South Wales",
                     "Local holiday", start.ToString("MM/dd/yyyy"), start.Year.ToString(),
                     start.Month.ToString(), start.Day.ToString(), start.DayOfWeek.ToString());
-                app.Config.Holidays = new List<AbstractApiHolidays> {holiday};
+                app.Config.Holidays = new List<AbstractApiHolidays> { holiday };
 
                 app.UtcRollover(app.Config.TestOverrideTime.ToUniversalTime(), true);
                 var showTime = app.GetShowtime();
-                _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                    app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                _testOutputHelper.WriteLine(
+                    "Local: {0:dd-MMM H:mm:ss}, UTC: {1:dd-MMM H:mm:ss} / Start {2:dd-MMM H:mm:ss}, Next UTC ShowTime: {3:dd-MMM H:mm:ss} - {4:dd-MMM H:mm:ss}, Matches {5}",
+                    app.Config.TestOverrideTime, app.Config.TestOverrideTime.ToUniversalTime(),
+                    start.AddDays(1).ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                    showTime.End.ToUniversalTime(),
                     showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
 
                 Assert.True(showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
@@ -227,10 +261,14 @@ namespace Seq.App.EventSchedule.Tests
                 app.UtcRollover(app.Config.TestOverrideTime.ToUniversalTime());
                 var showTime = app.GetShowtime();
 
+                //Only once per day will the start and test override times coincide
                 if (start < app.Config.TestOverrideTime)
                 {
-                    _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                        app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                    _testOutputHelper.WriteLine(
+                        "Local: {0:dd-MMM H:mm:ss}, UTC: {1:dd-MMM H:mm:ss} / Start {2:dd-MMM H:mm:ss}, Next UTC ShowTime: {3:dd-MMM H:mm:ss} - {4:dd-MMM H:mm:ss}, Matches {5}",
+                        app.Config.TestOverrideTime, app.Config.TestOverrideTime.ToUniversalTime(),
+                        start.AddDays(1).ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                        showTime.End.ToUniversalTime(),
                         showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
                     Assert.True(showTime.Start.ToString("F") == start.AddDays(1).ToUniversalTime().ToString("F"));
                     Assert.True(showTime.End.ToString("F") ==
@@ -238,8 +276,11 @@ namespace Seq.App.EventSchedule.Tests
                 }
                 else
                 {
-                    _testOutputHelper.WriteLine("Time: {0:F}, Next ShowTime: {1:F}, Matches {2}",
-                        app.Config.TestOverrideTime.ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                    _testOutputHelper.WriteLine(
+                        "Local: {0:dd-MMM H:mm:ss}, UTC: {1:dd-MMM H:mm:ss} / Start {2:dd-MMM H:mm:ss}, Next UTC ShowTime: {3:dd-MMM H:mm:ss} - {4:dd-MMM H:mm:ss}, Matches {5}",
+                        app.Config.TestOverrideTime, app.Config.TestOverrideTime.ToUniversalTime(),
+                        start.AddDays(1).ToUniversalTime(), showTime.Start.ToUniversalTime(),
+                        showTime.End.ToUniversalTime(),
                         showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
                     Assert.True(showTime.Start.ToString("F") == start.ToUniversalTime().ToString("F"));
                     Assert.True(showTime.End.ToString("F") == start.AddHours(1).ToUniversalTime().ToString("F"));
@@ -250,12 +291,12 @@ namespace Seq.App.EventSchedule.Tests
         [Fact]
         public void HolidaysMatch()
         {
-            var holiday = new AbstractApiHolidays("Threshold Day", "", "AU", "", "AU", "Australia - New South Wales",
+            var holiday = new AbstractApiHolidays("Schedule Day", "", "AU", "", "AU", "Australia - New South Wales",
                 "Local holiday", DateTime.Today.ToString("MM/dd/yyyy"), DateTime.Today.Year.ToString(),
                 DateTime.Today.Month.ToString(), DateTime.Today.Day.ToString(), DateTime.Today.DayOfWeek.ToString());
 
-            Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> {holiday},
-                new List<string> {"National", "Local"}, new List<string> {"Australia", "New South Wales"}, false,
+            Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> { holiday },
+                new List<string> { "National", "Local" }, new List<string> { "Australia", "New South Wales" }, false,
                 true).Count > 0);
         }
 
@@ -263,7 +304,7 @@ namespace Seq.App.EventSchedule.Tests
         public void RenderTemplate()
         {
             var app = Some.Reactor(DateTime.Now.AddSeconds(1).ToString("H:mm:ss"),
-                 0);
+                0);
             app.UseHandlebars = true;
             app.AlertMessage =
                 "{{AppName}}  {{TimeNow}} - {dd-MM-yyyy+10m}";

@@ -35,8 +35,10 @@
       - Add month configuration
       - Add Handlebars template functionality
       - Eliminate lingering references to Thresholds in logs
-    </PackageReleaseNotes>
-    <Version>1.0.31</Version>
+      - Address DST inconsistencies
+      - Address duplicate multi-log events
+</PackageReleaseNotes>
+    <Version>1.0.32</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -48,7 +50,7 @@
 
   <ItemGroup>
     <PackageReference Include="Handlebars.Net" Version="2.0.9" />
-    <PackageReference Include="Lurgle.Dates" Version="1.0.10" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.11" />
     <PackageReference Include="Seq.Apps" Version="5.1.0" />
   </ItemGroup>
 
@@ -57,10 +59,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None
-      Include="$(OutDir)/**/Flurl.Http.dll;$(OutDir)/**/Flurl.dll;$(OutDir)/**/Lurgle.Dates.dll;$(OutDir)/**/Handlebars.dll;"
-      Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true"
-      PackagePath="lib/$(TargetFramework)" />
+    <None Include="$(OutDir)/**/Flurl.Http.dll;$(OutDir)/**/Flurl.dll;$(OutDir)/**/Lurgle.Dates.dll;$(OutDir)/**/Handlebars.dll;" Exclude="$(OutDir)/$(MSBuildProjectName).dll;$(OutDir)/Seq.Apps.dll;$(OutDir)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
     <None Include="schedule.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

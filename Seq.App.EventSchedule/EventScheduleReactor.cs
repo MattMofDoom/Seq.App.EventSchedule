@@ -348,25 +348,25 @@ namespace Seq.App.EventSchedule
 
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "Validate Include Days of Month {Config.IncludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Validate Include Days of Month {IncludeDays} ...",
                     IncludeDaysOfMonth);
 
             Config.IncludeDays =
                 Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {Config.IncludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {IncludeDays} ...",
                     Config.IncludeDays.ToArray());
             else
                 LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: ALL ...");
 
             if (Config.Diagnostics)
-                LogEvent(LogEventLevel.Debug, "Validate Exclude Days of Month {Config.ExcludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Validate Exclude Days of Month {ExcludeDays} ...",
                     ExcludeDaysOfMonth);
 
             Config.ExcludeDays =
                 Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.ExcludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {Config.ExcludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {ExcludeDays} ...",
                     Config.ExcludeDays.ToArray());
             else
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: NONE ...");
@@ -545,26 +545,36 @@ namespace Seq.App.EventSchedule
 
                     var difference = timeNow - Counters.LastLog;
                     //Check if we can log the event, whether a single instance or repeating schedule
-                    if (!Counters.EventLogged || Config.RepeatSchedule &&
-                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds)
+                    if ((!Counters.EventLogged || Config.RepeatSchedule &&
+                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds) && !Counters.LoggingEvents)
                     {
+                        Counters.LoggingEvents = true;
+
                         if (Config.LogTokenLookup.Any())
                             //Log multiple events
+                        {
                             foreach (var token in Config.LogTokenLookup)
+                            {
                                 //Log event
                                 ScheduledLogEvent(Config.ScheduleLogLevel,
                                     Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
                                     Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description,
                                     token);
+                                Counters.LogCount++;
+                            }
+                        }
                         else
+                        {
                             //Log event
                             ScheduledLogEvent(Config.ScheduleLogLevel,
                                 Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
                                 Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description);
+                            Counters.LogCount++;
+                        }
 
                         Counters.LastLog = timeNow;
                         Counters.EventLogged = true;
-                        Counters.LogCount++;
+                        Counters.LoggingEvents = false;
                     }
                 }
             }
@@ -573,7 +583,7 @@ namespace Seq.App.EventSchedule
                 //Showtime can end even if we're retrieving holidays
                 if (Counters.IsShowtime)
                     LogEvent(LogEventLevel.Debug,
-                        "UTC End Time {Time} ({DayOfWeek}), no longer logging scheduled events, total logged {Counters.LogCount}  ...",
+                        "UTC End Time {Time} ({DayOfWeek}), no longer logging scheduled events, total logged {LogCount}  ...",
                         Counters.EndTime.ToShortTimeString(), Counters.EndTime.DayOfWeek, Counters.LogCount);
 
                 //Reset the match counters
@@ -591,13 +601,13 @@ namespace Seq.App.EventSchedule
             Config.IncludeDays =
                 Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {Config.IncludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {IncludeDays} ...",
                     Config.IncludeDays.ToArray());
 
             Config.ExcludeDays =
                 Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.ExcludeDays.Count > 0)
-                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {Config.ExcludeDays} ...",
+                LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: {ExcludeDays} ...",
                     Config.ExcludeDays.ToArray());
         }
 
@@ -776,42 +786,33 @@ namespace Seq.App.EventSchedule
 
             //Day rollover, we need to ensure the next start and end is in the future
             if (!string.IsNullOrEmpty(Config.TestDate))
-                Counters.StartTime = DateTime.ParseExact(Config.TestDate + " " + ScheduleTime,
-                    "yyyy-M-d " + Config.StartFormat,
-                    CultureInfo.InvariantCulture, DateTimeStyles.None).ToUniversalTime();
+                Counters.StartTime =
+                    Dates.ParseUtcIntervalDate(Config.TestDate, ScheduleTime, timeFormat: Config.StartFormat);
             else if (Config.UseTestOverrideTime)
-                Counters.StartTime = DateTime
-                    .ParseExact(Config.TestOverrideTime.ToString("yyyy-M-d") + " " + ScheduleTime,
-                        "yyyy-M-d " + Config.StartFormat,
-                        CultureInfo.InvariantCulture, DateTimeStyles.None)
-                    .ToUniversalTime();
+                Counters.StartTime =
+                    Dates.ParseUtcIntervalDate(Config.TestOverrideTime, ScheduleTime, Config.StartFormat);
             else
-                Counters.StartTime = DateTime
-                    .ParseExact(ScheduleTime, Config.StartFormat, CultureInfo.InvariantCulture, DateTimeStyles.None)
-                    .ToUniversalTime();
-
-            //Detect a repeating schedule and DateTokens.Handle it - otherwise end time is 1 hour after start
-            Counters.EndTime = Config.RepeatSchedule ? Counters.StartTime.AddDays(1) : Counters.StartTime.AddHours(1);
+                Counters.StartTime =
+                    Dates.ParseUtcIntervalDate(DateTime.Today, ScheduleTime, Config.StartFormat);
 
             //If there are holidays, account for them
             if (Config.Holidays.Any(holiday =>
                 Counters.StartTime >= holiday.UtcStart && Counters.StartTime < holiday.UtcEnd))
-            {
-                Counters.StartTime = Counters.StartTime.AddDays(Config.Holidays.Any(holiday =>
-                    Counters.StartTime.AddDays(1) >= holiday.UtcStart && Counters.StartTime.AddDays(1) < holiday.UtcEnd)
+                Counters.StartTime = GetNextStart(Config.Holidays.Any(holiday =>
+                    GetNextStart(1) >= holiday.UtcStart && GetNextStart(1) < holiday.UtcEnd)
                     ? 2
                     : 1);
-                Counters.EndTime = Counters.EndTime.AddDays(Counters.EndTime.AddDays(1) < Counters.StartTime ? 2 : 1);
-            }
 
             //If we updated holidays or this is a repeating schedule, don't automatically put start time to the future
             if (!RepeatSchedule && (!Config.UseTestOverrideTime && Counters.StartTime < utcDate ||
                                     Config.UseTestOverrideTime &&
                                     Counters.StartTime < Config.TestOverrideTime.ToUniversalTime()) &&
-                !isUpdateHolidays) Counters.StartTime = Counters.StartTime.AddDays(1);
+                !isUpdateHolidays)
+                Counters.StartTime = GetNextStart(GetNextStart(1) < utcDate ? 2 : 1);
 
-            if (Counters.EndTime < Counters.StartTime)
-                Counters.EndTime = Counters.EndTime.AddDays(Counters.EndTime.AddDays(1) < Counters.StartTime ? 2 : 1);
+            //Detect a repeating schedule and handle it - otherwise end time is 1 hour after start
+            Counters.EndTime = Config.RepeatSchedule ? GetNextStart(1) : Counters.StartTime.AddHours(1);
+
 
             LogEvent(LogEventLevel.Debug,
                 isUpdateHolidays
@@ -820,6 +821,11 @@ namespace Seq.App.EventSchedule
                 ScheduleTime, Counters.StartTime.ToShortTimeString(), Counters.StartTime.DayOfWeek,
                 Counters.EndTime.ToShortTimeString(),
                 Counters.EndTime.DayOfWeek);
+        }
+
+        public DateTime GetNextStart(int addDays = 0)
+        {
+            return Dates.ParseUtcIntervalDate(Counters.StartTime.AddDays(addDays), ScheduleTime, Config.StartFormat);
         }
 
         public Showtime GetShowtime()
