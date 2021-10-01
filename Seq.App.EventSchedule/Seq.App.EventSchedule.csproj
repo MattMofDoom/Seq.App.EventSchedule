@@ -36,6 +36,7 @@
       - Add Handlebars template functionality
       - Eliminate lingering references to Thresholds in logs
       - Address DST inconsistencies
+      - Address duplicate multi-log events
 </PackageReleaseNotes>
     <Version>1.0.32</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

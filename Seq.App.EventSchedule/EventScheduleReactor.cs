@@ -545,26 +545,36 @@ namespace Seq.App.EventSchedule
 
                     var difference = timeNow - Counters.LastLog;
                     //Check if we can log the event, whether a single instance or repeating schedule
-                    if (!Counters.EventLogged || Config.RepeatSchedule &&
-                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds)
+                    if ((!Counters.EventLogged || Config.RepeatSchedule &&
+                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds) && !Counters.LoggingEvents)
                     {
+                        Counters.LoggingEvents = true;
+
                         if (Config.LogTokenLookup.Any())
                             //Log multiple events
+                        {
                             foreach (var token in Config.LogTokenLookup)
+                            {
                                 //Log event
                                 ScheduledLogEvent(Config.ScheduleLogLevel,
                                     Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
                                     Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description,
                                     token);
+                                Counters.LogCount++;
+                            }
+                        }
                         else
+                        {
                             //Log event
                             ScheduledLogEvent(Config.ScheduleLogLevel,
                                 Config.UseHandlebars ? MessageTemplate.Render(Config, Counters) : Message,
                                 Config.UseHandlebars ? DescriptionTemplate.Render(Config, Counters) : Description);
+                            Counters.LogCount++;
+                        }
 
                         Counters.LastLog = timeNow;
                         Counters.EventLogged = true;
-                        Counters.LogCount++;
+                        Counters.LoggingEvents = false;
                     }
                 }
             }
