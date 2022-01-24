@@ -273,10 +273,10 @@ namespace Seq.App.EventSchedule
                 LogEvent(LogEventLevel.Debug, "App name {AppName} will be included in alert message ...", App.Title);
 
             if (!DateTime.TryParseExact(ScheduleTime, "H:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                out _))
+                    out _))
             {
                 if (DateTime.TryParseExact(ScheduleTime, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                    out _))
+                        out _))
                     Config.StartFormat = "H:mm";
                 else
                     LogEvent(LogEventLevel.Debug,
@@ -310,7 +310,7 @@ namespace Seq.App.EventSchedule
                 if (Config.Diagnostics)
                     LogEvent(LogEventLevel.Debug, "Convert Multi-Log Tokens to dictionary ...");
                 var tokens = (MultiLogToken ?? "")
-                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Trim())
                     .ToList();
                 foreach (var x in from token in tokens where token.Contains("=") select token.Split('='))
@@ -371,7 +371,7 @@ namespace Seq.App.EventSchedule
             else
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: NONE ...");
 
-            if (UseHandlebars != null) Config.UseHandlebars = (bool)UseHandlebars;
+            if (UseHandlebars != null) Config.UseHandlebars = (bool) UseHandlebars;
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug,
                     "Use Handlebars to render Log Message and Description: '{UseHandlebars}' ...",
@@ -402,7 +402,7 @@ namespace Seq.App.EventSchedule
                     Description);
 
             if (IncludeDescription != null)
-                Config.IncludeDescription = (bool)IncludeDescription;
+                Config.IncludeDescription = (bool) IncludeDescription;
 
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug, "Include Description in Log Message: '{IncludeDescription}' ...",
@@ -411,7 +411,7 @@ namespace Seq.App.EventSchedule
             if (Config.Diagnostics) LogEvent(LogEventLevel.Debug, "Convert Tags '{Tags}' to array ...", Tags);
 
             Config.Tags = (Tags ?? "")
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.Trim())
                 .ToArray();
             if (Config.Tags.Length > 0) Config.IsTags = true;
@@ -429,12 +429,12 @@ namespace Seq.App.EventSchedule
                 {
                     LogEvent(LogEventLevel.Debug, "Convert Responders to dictionary ...");
                     var responderList = (Responders ?? "")
-                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                         .Select(t => t.Trim())
                         .ToList();
                     foreach (var x in from responder in responderList
-                        where responder.Contains("=")
-                        select responder.Split('='))
+                             where responder.Contains("=")
+                             select responder.Split('='))
                     {
                         Config.ResponderLookup.Add(x[0], x[1]);
                         if (Config.Diagnostics)
@@ -517,7 +517,7 @@ namespace Seq.App.EventSchedule
                                              Config.IncludeDays.Count > 0 &&
                                              !Config.IncludeDays.Contains(Counters.StartTime) ||
                                              Config.ExcludeDays.Contains(Counters.StartTime) ||
-                                             !Config.MonthsOfYear.Contains((MonthOfYear)localDate.Month)))
+                                             !Config.MonthsOfYear.Contains((MonthOfYear) localDate.Month)))
                 {
                     //Log that we have skipped a day due to an exclusion
                     if (!Counters.SkippedShowtime)
@@ -526,7 +526,7 @@ namespace Seq.App.EventSchedule
                             !Config.DaysOfWeek.Contains(Counters.StartTime.DayOfWeek),
                             Config.IncludeDays.Count > 0 && !Config.IncludeDays.Contains(Counters.StartTime),
                             Config.ExcludeDays.Count > 0 && Config.ExcludeDays.Contains(Counters.StartTime),
-                            !Config.MonthsOfYear.Contains((MonthOfYear)localDate.Month));
+                            !Config.MonthsOfYear.Contains((MonthOfYear) localDate.Month));
 
                     Counters.SkippedShowtime = true;
                 }
@@ -546,7 +546,7 @@ namespace Seq.App.EventSchedule
                     var difference = timeNow - Counters.LastLog;
                     //Check if we can log the event, whether a single instance or repeating schedule
                     if ((!Counters.EventLogged || Config.RepeatSchedule &&
-                        difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds) && !Counters.LoggingEvents)
+                            difference.TotalSeconds > Config.ScheduleInterval.TotalSeconds) && !Counters.LoggingEvents)
                     {
                         Counters.LoggingEvents = true;
 
@@ -638,13 +638,13 @@ namespace Seq.App.EventSchedule
                             Config.HolidayMatch = new List<string>();
                         else
                             Config.HolidayMatch = HolidayMatch
-                                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToList();
 
                         if (string.IsNullOrEmpty(LocaleMatch))
                             Config.LocaleMatch = new List<string>();
                         else
-                            Config.LocaleMatch = LocaleMatch.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            Config.LocaleMatch = LocaleMatch.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToList();
 
                         if (!string.IsNullOrEmpty(Proxy))
@@ -653,7 +653,7 @@ namespace Seq.App.EventSchedule
                             Config.Proxy = Proxy;
                             Config.BypassLocal = BypassLocal;
                             Config.LocalAddresses = LocalAddresses
-                                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(t => t.Trim()).ToArray();
                             Config.ProxyUser = ProxyUser;
                             Config.ProxyPass = ProxyPass;
@@ -703,8 +703,8 @@ namespace Seq.App.EventSchedule
         private void RetrieveHolidays(DateTime localDate, DateTime utcDate)
         {
             if (Config.UseHolidays && (!Counters.IsUpdating || Counters.IsUpdating &&
-                (DateTime.Now - Counters.LastUpdate).TotalSeconds > 10 &&
-                (DateTime.Now - Counters.LastError).TotalSeconds > 10 && Counters.ErrorCount < Counters.RetryCount))
+                    (DateTime.Now - Counters.LastUpdate).TotalSeconds > 10 &&
+                    (DateTime.Now - Counters.LastError).TotalSeconds > 10 && Counters.ErrorCount < Counters.RetryCount))
             {
                 Counters.IsUpdating = true;
                 if (!string.IsNullOrEmpty(Config.TestDate))
@@ -797,7 +797,7 @@ namespace Seq.App.EventSchedule
 
             //If there are holidays, account for them
             if (Config.Holidays.Any(holiday =>
-                Counters.StartTime >= holiday.UtcStart && Counters.StartTime < holiday.UtcEnd))
+                    Counters.StartTime >= holiday.UtcStart && Counters.StartTime < holiday.UtcEnd))
                 Counters.StartTime = GetNextStart(Config.Holidays.Any(holiday =>
                     GetNextStart(1) >= holiday.UtcStart && GetNextStart(1) < holiday.UtcEnd)
                     ? 2
@@ -851,9 +851,9 @@ namespace Seq.App.EventSchedule
             {
                 if (token != null)
                     foreach (var responderPair in from responderPair in Config.ResponderLookup
-                        let tokenPair = (KeyValuePair<string, string>)token
-                        where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase)
-                        select responderPair)
+                             let tokenPair = (KeyValuePair<string, string>) token
+                             where responderPair.Key.Equals(tokenPair.Key, StringComparison.OrdinalIgnoreCase)
+                             select responderPair)
                     {
                         responder = responderPair.Value;
                         break;
@@ -876,7 +876,7 @@ namespace Seq.App.EventSchedule
                 .ForContext("Description",
                     token == null ? DateTokens.HandleTokens(description) : DateTokens.HandleTokens(description, token))
                 .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                .Write((Serilog.Events.LogEventLevel)logLevel,
+                .Write((Serilog.Events.LogEventLevel) logLevel,
                     string.IsNullOrEmpty(description) || !Config.IncludeDescription
                         ? include + "{Message}"
                         : include + "{Message} : {Description}");
@@ -905,7 +905,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext(nameof(Counters.LogCount), Counters.LogCount)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel)logLevel,
+                    .Write((Serilog.Events.LogEventLevel) logLevel,
                         Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), Config.Priority)
@@ -915,7 +915,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel)logLevel,
+                    .Write((Serilog.Events.LogEventLevel) logLevel,
                         Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
         }
 
@@ -943,7 +943,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext(nameof(Counters.LogCount), Counters.LogCount)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel)logLevel, exception,
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception,
                         Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
             else
                 Log.ForContext("AppName", App.Title).ForContext(nameof(Priority), Config.Priority)
@@ -953,7 +953,7 @@ namespace Seq.App.EventSchedule
                     .ForContext(nameof(RemainingTimeEstimate), Config.RemainingTimeEstimate)
                     .ForContext(nameof(ProjectKey), Config.ProjectKey).ForContext(nameof(DueDate), Config.DueDate)
                     .ForContext("MultiLogTokens", Config.LogTokenLookup)
-                    .Write((Serilog.Events.LogEventLevel)logLevel, exception,
+                    .Write((Serilog.Events.LogEventLevel) logLevel, exception,
                         Config.IncludeApp ? "[{AppName}] - " + message : message, logArgs);
         }
     }

@@ -37,8 +37,10 @@
       - Eliminate lingering references to Thresholds in logs
       - Address DST inconsistencies
       - Address duplicate multi-log events
+      - Dependency update
+      - Code cleanup
 </PackageReleaseNotes>
-    <Version>1.0.32</Version>
+    <Version>1.0.33</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -49,9 +51,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Handlebars.Net" Version="2.0.9" />
-    <PackageReference Include="Lurgle.Dates" Version="1.0.11" />
-    <PackageReference Include="Seq.Apps" Version="5.1.0" />
+    <PackageReference Include="Handlebars.Net" Version="2.0.10" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.12" />
+    <PackageReference Include="Seq.Apps" Version="2021.4.0" />
   </ItemGroup>
 
   <ItemGroup>
