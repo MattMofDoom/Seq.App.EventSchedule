@@ -220,7 +220,7 @@ namespace Seq.App.EventSchedule.Tests
                     "Australia - New South Wales",
                     "Local holiday", start.ToString("MM/dd/yyyy"), start.Year.ToString(),
                     start.Month.ToString(), start.Day.ToString(), start.DayOfWeek.ToString());
-                app.Config.Holidays = new List<AbstractApiHolidays> { holiday };
+                app.Config.Holidays = new List<AbstractApiHolidays> {holiday};
 
                 app.UtcRollover(app.Config.TestOverrideTime.ToUniversalTime(), true);
                 var showTime = app.GetShowtime();
@@ -295,8 +295,8 @@ namespace Seq.App.EventSchedule.Tests
                 "Local holiday", DateTime.Today.ToString("MM/dd/yyyy"), DateTime.Today.Year.ToString(),
                 DateTime.Today.Month.ToString(), DateTime.Today.Day.ToString(), DateTime.Today.DayOfWeek.ToString());
 
-            Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> { holiday },
-                new List<string> { "National", "Local" }, new List<string> { "Australia", "New South Wales" }, false,
+            Assert.True(Holidays.ValidateHolidays(new List<AbstractApiHolidays> {holiday},
+                new List<string> {"National", "Local"}, new List<string> {"Australia", "New South Wales"}, false,
                 true).Count > 0);
         }
 
