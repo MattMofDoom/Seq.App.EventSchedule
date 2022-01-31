@@ -40,7 +40,7 @@
       - Dependency update
       - Code cleanup
 </PackageReleaseNotes>
-    <Version>1.0.33</Version>
+    <Version>1.0.34</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -51,8 +51,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Handlebars.Net" Version="2.0.10" />
-    <PackageReference Include="Lurgle.Dates" Version="1.0.12" />
+    <PackageReference Include="Handlebars.Net" Version="2.1.0" />
+    <PackageReference Include="Lurgle.Dates" Version="1.0.13" />
     <PackageReference Include="Seq.Apps" Version="2021.4.0" />
   </ItemGroup>
 
