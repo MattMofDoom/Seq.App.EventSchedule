@@ -42,7 +42,7 @@
       - Fix error in end time logic
       - Resolve error in calculating days of month for shorter months
     </PackageReleaseNotes>
-    <Version>1.0.35</Version>
+    <Version>1.0.34</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
