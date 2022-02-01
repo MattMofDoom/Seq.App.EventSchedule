@@ -354,10 +354,31 @@ namespace Seq.App.EventSchedule
             Config.IncludeDays =
                 Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
+            {
                 LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {IncludeDays} ...",
                     Config.IncludeDays.ToArray());
+            }
             else
-                LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: ALL ...");
+            {
+                if ((IncludeDaysOfMonth ?? "")
+                    .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .ToArray().Length > 0)
+                {
+                    var day = DateTime.Now.AddDays(-1).Day;
+                    if (day > DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+                        day = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+                    Config.IncludeDays =
+                        Dates.GetUtcDaysOfMonth(day.ToString(), ScheduleTime, Config.StartFormat, DateTime.Now);
+                    LogEvent(LogEventLevel.Warning,
+                        "No valid days in configured days of month - selecting {IncludeDays} to preserve include function ...",
+                        Config.IncludeDays.ToArray());
+                }
+                else
+                {
+                    LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: ALL ...");
+                }
+            }
 
             if (Config.Diagnostics)
                 LogEvent(LogEventLevel.Debug, "Validate Exclude Days of Month {ExcludeDays} ...",
@@ -370,6 +391,7 @@ namespace Seq.App.EventSchedule
                     Config.ExcludeDays.ToArray());
             else
                 LogEvent(LogEventLevel.Debug, "Exclude UTC Days of Month: NONE ...");
+
 
             if (UseHandlebars != null) Config.UseHandlebars = (bool) UseHandlebars;
             if (Config.Diagnostics)
@@ -601,8 +623,32 @@ namespace Seq.App.EventSchedule
             Config.IncludeDays =
                 Dates.GetUtcDaysOfMonth(IncludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
             if (Config.IncludeDays.Count > 0)
+            {
                 LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: {IncludeDays} ...",
                     Config.IncludeDays.ToArray());
+            }
+            else
+            {
+                if ((IncludeDaysOfMonth ?? "")
+                    .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .ToArray().Length > 0)
+                {
+                    var day = DateTime.Now.AddDays(-1).Day;
+                    if (day > DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+                        day = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+                    Config.IncludeDays =
+                        Dates.GetUtcDaysOfMonth(day.ToString(), ScheduleTime, Config.StartFormat, DateTime.Now);
+                    LogEvent(LogEventLevel.Warning,
+                        "No valid days in configured days of month - selecting {IncludeDays} to preserve include function ...",
+                        Config.IncludeDays.ToArray());
+                }
+                else
+                {
+                    LogEvent(LogEventLevel.Debug, "Include UTC Days of Month: ALL ...");
+                }
+            }
+
 
             Config.ExcludeDays =
                 Dates.GetUtcDaysOfMonth(ExcludeDaysOfMonth, ScheduleTime, Config.StartFormat, DateTime.Now);
@@ -811,7 +857,9 @@ namespace Seq.App.EventSchedule
                 Counters.StartTime = GetNextStart(GetNextStart(1) < utcDate ? 2 : 1);
 
             //Detect a repeating schedule and handle it - otherwise end time is 1 hour after start
-            Counters.EndTime = Config.RepeatSchedule ? GetNextStart(1) : Counters.StartTime.AddHours(1);
+            Counters.EndTime = Config.RepeatSchedule
+                ? GetNextStart(GetNextStart(1) <= Counters.StartTime ? 2 : 1)
+                : Counters.StartTime.AddHours(1);
 
 
             LogEvent(LogEventLevel.Debug,
